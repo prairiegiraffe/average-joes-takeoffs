@@ -1,5 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Link, useLocation } from 'react-router-dom';
+import { getCurrentUser, logoutUser, isSuperAdmin, isContractor } from './utils/auth';
+import Login from './components/Login';
+import AdminDashboard from './components/AdminDashboard';
 
 const mockProjects = [
   {
@@ -36,7 +39,7 @@ const navItems = [
 ];
 
 // Sidebar Component
-const Sidebar = () => {
+const Sidebar = ({ user, onLogout }) => {
   const location = useLocation();
   
   return (
@@ -48,6 +51,22 @@ const Sidebar = () => {
               Average Joe's Takeoffs
             </h1>
           </div>
+          
+          {/* User info */}
+          {user && (
+            <div className="px-4 py-3 border-b border-gray-700">
+              <div className="flex items-center">
+                <div className="text-2xl mr-3">
+                  {isSuperAdmin(user) ? '👑' : '🏗️'}
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-white">{user.name}</p>
+                  <p className="text-xs text-gray-400">{user.company}</p>
+                </div>
+              </div>
+            </div>
+          )}
+
           <nav className="mt-5 flex-1 px-2 space-y-1">
             {navItems.map((item) => (
               <Link
@@ -64,6 +83,17 @@ const Sidebar = () => {
               </Link>
             ))}
           </nav>
+          
+          {/* Logout button */}
+          <div className="px-2 pb-4">
+            <button
+              onClick={onLogout}
+              className="group flex items-center w-full px-2 py-2 text-sm font-medium rounded-md text-gray-300 hover:bg-gray-700 hover:text-white"
+            >
+              <span className="mr-3 text-lg">🚪</span>
+              Logout
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -71,7 +101,7 @@ const Sidebar = () => {
 };
 
 // Mobile Navigation
-const MobileNav = () => {
+const MobileNav = ({ user, onLogout }) => {
   const location = useLocation();
   const mobileNavItems = navItems.slice(0, 4); // Show first 4 items on mobile
   
@@ -79,10 +109,21 @@ const MobileNav = () => {
     <div className="md:hidden">
       {/* Mobile Header */}
       <div className="bg-gray-800 border-b border-gray-700">
-        <div className="px-4 py-3">
-          <h1 className="text-white text-lg font-bold">
-            Average Joe's Takeoffs
-          </h1>
+        <div className="px-4 py-3 flex justify-between items-center">
+          <div>
+            <h1 className="text-white text-lg font-bold">
+              Average Joe's Takeoffs
+            </h1>
+            {user && (
+              <p className="text-xs text-gray-400">{user.company}</p>
+            )}
+          </div>
+          <button
+            onClick={onLogout}
+            className="text-gray-400 hover:text-white"
+          >
+            <span className="text-xl">🚪</span>
+          </button>
         </div>
       </div>
       
@@ -112,11 +153,11 @@ const MobileNav = () => {
 };
 
 // Layout Component
-const Layout = ({ children }) => (
+const Layout = ({ children, user, onLogout }) => (
   <div className="min-h-screen bg-gray-50">
-    <Sidebar />
+    <Sidebar user={user} onLogout={onLogout} />
     <div className="md:pl-64 flex flex-col min-h-screen">
-      <MobileNav />
+      <MobileNav user={user} onLogout={onLogout} />
       <main className="flex-1 pb-16 md:pb-0">
         {children}
       </main>
@@ -265,9 +306,53 @@ const Home = () => {
 };
 
 function App() {
+  const [user, setUser] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Check for existing user on app load
+  useEffect(() => {
+    const existingUser = getCurrentUser();
+    if (existingUser) {
+      setUser(existingUser);
+    }
+    setIsLoading(false);
+  }, []);
+
+  const handleLogin = (loggedInUser) => {
+    setUser(loggedInUser);
+  };
+
+  const handleLogout = () => {
+    logoutUser();
+    setUser(null);
+  };
+
+  // Loading state
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-800 flex items-center justify-center">
+        <div className="text-white text-center">
+          <div className="text-4xl font-bold mb-4">Average Joe's Takeoffs</div>
+          <div className="text-lg">Loading...</div>
+        </div>
+      </div>
+    );
+  }
+
+  // Not logged in - show login
+  if (!user) {
+    return <Login onLogin={handleLogin} />;
+  }
+
+  // Super Admin gets admin dashboard
+  if (isSuperAdmin(user)) {
+    return <AdminDashboard user={user} onLogout={handleLogout} />;
+  }
+
+  // Contractors get the regular app
   return (
     <Router>
-      <Layout>
+      <Layout user={user} onLogout={handleLogout}>
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/profile" element={<Profile />} />
