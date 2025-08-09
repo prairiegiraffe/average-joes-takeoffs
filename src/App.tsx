@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Link, useLocation } from 'react
 import { getCurrentUser, logoutUser, isSuperAdmin, isContractor } from './utils/auth';
 import Login from './components/Login';
 import AdminDashboard from './components/AdminDashboard';
+import RoofingCalculator from './components/RoofingCalculator';
 
 const mockProjects = [
   {
@@ -204,10 +205,7 @@ const Insurance = () => (
 
 const Takeoffs = () => (
   <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-    <h1 className="text-3xl font-bold text-gray-900 mb-8">Takeoffs</h1>
-    <div className="bg-white rounded-lg shadow p-6">
-      <p className="text-gray-600">Takeoff management coming soon...</p>
-    </div>
+    <RoofingCalculator />
   </div>
 );
 
