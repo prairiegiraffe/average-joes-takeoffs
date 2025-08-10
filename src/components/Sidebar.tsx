@@ -8,7 +8,7 @@ import {
   Shield, 
   Calculator 
 } from 'lucide-react';
-import { NavigationItem } from '../types';
+import type { NavigationItem } from '../types';
 
 const navigationItems: NavigationItem[] = [
   { id: 'home', name: 'Home', href: '/', icon: Home, current: false },

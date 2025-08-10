@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { User, Calculator, Clock, DollarSign } from 'lucide-react';
-import { Project } from '../types';
+import type { Project } from '../types';
 
 const mockProjects: Project[] = [
   {
