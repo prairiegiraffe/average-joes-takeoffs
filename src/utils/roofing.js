@@ -190,8 +190,6 @@ export const createEmptyElevation = (elevationId) => ({
   ridgeLength: '',
   valleyLength: '',
   penetrations: 0,
-  manufacturer: 'gaf',
-  shingleColor: 'charcoal-black',
   photo: null,
   completed: false,
   notes: ''

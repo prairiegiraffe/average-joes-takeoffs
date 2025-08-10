@@ -16,6 +16,7 @@ import {
   FileText
 } from 'lucide-react';
 import type { Customer, CustomerStatus, ProjectType, CustomerStats } from '../types';
+import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 
 const PROJECT_TYPES: { value: ProjectType; label: string }[] = [
   { value: 'roofing', label: 'Roofing' },
@@ -52,6 +53,7 @@ const MOCK_CUSTOMERS: Customer[] = [
     estimatedValue: 15000,
     status: 'active_project',
     lastContact: new Date('2025-08-08'),
+    projects: [],
     notes: 'Needs new shingles after hail damage',
     createdDate: new Date('2025-07-15'),
     updatedDate: new Date('2025-08-08')
@@ -66,6 +68,7 @@ const MOCK_CUSTOMERS: Customer[] = [
     estimatedValue: 22000,
     status: 'active_lead',
     lastContact: new Date('2025-08-05'),
+    projects: [],
     notes: 'Interested in vinyl siding replacement',
     createdDate: new Date('2025-07-20'),
     updatedDate: new Date('2025-08-05')
@@ -80,7 +83,8 @@ const MOCK_CUSTOMERS: Customer[] = [
     estimatedValue: 18500,
     status: 'closed_project',
     lastContact: new Date('2025-07-30'),
-    notes: 'Project completed successfully',
+    projects: [],
+    notes: 'Previous project completed successfully',
     createdDate: new Date('2025-06-10'),
     updatedDate: new Date('2025-07-30')
   },
@@ -94,6 +98,7 @@ const MOCK_CUSTOMERS: Customer[] = [
     estimatedValue: 8500,
     status: 'dead_lead',
     lastContact: new Date('2025-07-25'),
+    projects: [],
     notes: 'Decided to postpone project',
     createdDate: new Date('2025-07-01'),
     updatedDate: new Date('2025-07-25')
@@ -162,7 +167,7 @@ const CustomerModal: React.FC<CustomerModalProps> = ({ customer, isOpen, onClose
     <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-screen overflow-y-auto">
         <div className="flex items-center justify-between p-6 border-b">
-          <h2 className="text-xl font-semibold text-gray-900">
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
             {customer ? 'Edit Customer' : 'Add New Customer'}
           </h2>
           <button
@@ -308,6 +313,7 @@ interface CustomerDetailModalProps {
   onEdit: () => void;
   onDelete: () => void;
   onEmail: () => void;
+  onViewTakeoff?: (takeoff: any) => void;
 }
 
 const CustomerDetailModal: React.FC<CustomerDetailModalProps> = ({
@@ -316,7 +322,8 @@ const CustomerDetailModal: React.FC<CustomerDetailModalProps> = ({
   onClose,
   onEdit,
   onDelete,
-  onEmail
+  onEmail,
+  onViewTakeoff
 }) => {
   if (!isOpen || !customer) return null;
 
@@ -326,7 +333,7 @@ const CustomerDetailModal: React.FC<CustomerDetailModalProps> = ({
     <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-screen overflow-y-auto">
         <div className="flex items-center justify-between p-6 border-b">
-          <h2 className="text-xl font-semibold text-gray-900">Customer Details</h2>
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">Customer Details</h2>
           <button
             onClick={onClose}
             className="p-2 hover:bg-gray-100 rounded-md transition-colors"
@@ -342,7 +349,7 @@ const CustomerDetailModal: React.FC<CustomerDetailModalProps> = ({
                 <User className="w-5 h-5 text-gray-400" />
                 <div>
                   <p className="text-sm text-gray-600">Customer Name</p>
-                  <p className="font-medium text-gray-900">{customer.name}</p>
+                  <p className="font-medium text-gray-900 dark:text-gray-100">{customer.name}</p>
                 </div>
               </div>
               
@@ -350,7 +357,7 @@ const CustomerDetailModal: React.FC<CustomerDetailModalProps> = ({
                 <Phone className="w-5 h-5 text-gray-400" />
                 <div>
                   <p className="text-sm text-gray-600">Phone</p>
-                  <p className="font-medium text-gray-900">{customer.phone}</p>
+                  <p className="font-medium text-gray-900 dark:text-gray-100">{customer.phone}</p>
                 </div>
               </div>
               
@@ -358,7 +365,7 @@ const CustomerDetailModal: React.FC<CustomerDetailModalProps> = ({
                 <Mail className="w-5 h-5 text-gray-400" />
                 <div>
                   <p className="text-sm text-gray-600">Email</p>
-                  <p className="font-medium text-gray-900">{customer.email}</p>
+                  <p className="font-medium text-gray-900 dark:text-gray-100">{customer.email}</p>
                 </div>
               </div>
               
@@ -366,7 +373,7 @@ const CustomerDetailModal: React.FC<CustomerDetailModalProps> = ({
                 <Building className="w-5 h-5 text-gray-400" />
                 <div>
                   <p className="text-sm text-gray-600">Project Type</p>
-                  <p className="font-medium text-gray-900">{projectTypeLabel}</p>
+                  <p className="font-medium text-gray-900 dark:text-gray-100">{projectTypeLabel}</p>
                 </div>
               </div>
             </div>
@@ -376,7 +383,7 @@ const CustomerDetailModal: React.FC<CustomerDetailModalProps> = ({
                 <MapPin className="w-5 h-5 text-gray-400" />
                 <div>
                   <p className="text-sm text-gray-600">Project Address</p>
-                  <p className="font-medium text-gray-900">{customer.projectAddress}</p>
+                  <p className="font-medium text-gray-900 dark:text-gray-100">{customer.projectAddress}</p>
                 </div>
               </div>
               
@@ -384,7 +391,7 @@ const CustomerDetailModal: React.FC<CustomerDetailModalProps> = ({
                 <DollarSign className="w-5 h-5 text-gray-400" />
                 <div>
                   <p className="text-sm text-gray-600">Estimated Value</p>
-                  <p className="font-medium text-gray-900">${customer.estimatedValue.toLocaleString()}</p>
+                  <p className="font-medium text-gray-900 dark:text-gray-100">${customer.estimatedValue.toLocaleString()}</p>
                 </div>
               </div>
               
@@ -392,7 +399,7 @@ const CustomerDetailModal: React.FC<CustomerDetailModalProps> = ({
                 <Calendar className="w-5 h-5 text-gray-400" />
                 <div>
                   <p className="text-sm text-gray-600">Last Contact</p>
-                  <p className="font-medium text-gray-900">{customer.lastContact.toLocaleDateString()}</p>
+                  <p className="font-medium text-gray-900 dark:text-gray-100">{customer.lastContact.toLocaleDateString()}</p>
                 </div>
               </div>
               
@@ -405,13 +412,91 @@ const CustomerDetailModal: React.FC<CustomerDetailModalProps> = ({
             </div>
           </div>
           
+          {/* Projects Section */}
+          <div className="mt-6">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Projects & Takeoffs</h3>
+            
+            {customer.projects && customer.projects.length > 0 ? (
+              <div className="space-y-4">
+                {customer.projects.map(project => (
+                  <div key={project.id} className="border border-gray-200 dark:border-gray-600 rounded-lg p-4">
+                    <div className="flex justify-between items-start mb-3">
+                      <div>
+                        <h4 className="font-medium text-gray-900 dark:text-gray-100">{project.name}</h4>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">{project.description}</p>
+                      </div>
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                        project.status === 'completed' ? 'bg-green-100 text-green-800' :
+                        project.status === 'in_progress' ? 'bg-blue-100 text-blue-800' :
+                        project.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                        'bg-gray-100 text-gray-800'
+                      }`}>
+                        {project.status.replace('_', ' ')}
+                      </span>
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-4 mb-3 text-sm">
+                      <div>
+                        <span className="text-gray-600 dark:text-gray-400">Type: </span>
+                        <span className="text-gray-900 dark:text-gray-100 capitalize">{project.projectType}</span>
+                      </div>
+                      <div>
+                        <span className="text-gray-600 dark:text-gray-400">Value: </span>
+                        <span className="text-gray-900 dark:text-gray-100">${project.estimatedValue.toLocaleString()}</span>
+                      </div>
+                    </div>
+
+                    {/* Takeoffs for this project */}
+                    {project.takeoffs && project.takeoffs.length > 0 && (
+                      <div className="mt-3 pt-3 border-t border-gray-100 dark:border-gray-600">
+                        <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Takeoffs:</p>
+                        <div className="space-y-2">
+                          {project.takeoffs.map(takeoff => (
+                            <div 
+                              key={takeoff.id} 
+                              className="bg-gray-50 dark:bg-gray-700 rounded p-3 text-sm cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
+                              onClick={() => onViewTakeoff?.(takeoff)}
+                              title="Click to view takeoff details"
+                            >
+                              <div className="flex justify-between items-start">
+                                <div>
+                                  <p className="font-medium text-gray-900 dark:text-gray-100">{takeoff.name}</p>
+                                  <p className="text-gray-600 dark:text-gray-400">Type: {takeoff.type}</p>
+                                  {takeoff.actualCost && (
+                                    <p className="text-gray-600 dark:text-gray-400">Cost: ${takeoff.actualCost.toLocaleString()}</p>
+                                  )}
+                                </div>
+                                <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                                  takeoff.status === 'completed' ? 'bg-green-100 text-green-800' :
+                                  takeoff.status === 'in_progress' ? 'bg-blue-100 text-blue-800' :
+                                  'bg-gray-100 text-gray-800'
+                                }`}>
+                                  {takeoff.status}
+                                </span>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                <p className="text-gray-500 dark:text-gray-400">No projects found for this customer</p>
+                <p className="text-sm text-gray-400 dark:text-gray-500 mt-1">Create a new takeoff to automatically add projects</p>
+              </div>
+            )}
+          </div>
+
           {customer.notes && (
             <div className="mt-6">
               <div className="flex items-start space-x-3">
                 <FileText className="w-5 h-5 text-gray-400 mt-0.5" />
                 <div>
                   <p className="text-sm text-gray-600 mb-2">Notes</p>
-                  <p className="text-gray-900">{customer.notes}</p>
+                  <p className="text-gray-900 dark:text-gray-100">{customer.notes}</p>
                 </div>
               </div>
             </div>
@@ -446,15 +531,211 @@ const CustomerDetailModal: React.FC<CustomerDetailModalProps> = ({
   );
 };
 
+// Takeoff Detail Modal Component
+interface TakeoffDetailModalProps {
+  takeoff: any;
+  isOpen: boolean;
+  onClose: () => void;
+  onEdit?: (takeoff: any) => void;
+}
+
+const TakeoffDetailModal: React.FC<TakeoffDetailModalProps> = ({ takeoff, isOpen, onClose, onEdit }) => {
+  console.log('TakeoffDetailModal - isOpen:', isOpen, 'takeoff:', takeoff);
+  if (!isOpen || !takeoff) return null;
+
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 0
+    }).format(amount);
+  };
+
+  return (
+    <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+        <div className="flex items-center justify-between p-6 border-b dark:border-gray-700">
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">Takeoff Details</h2>
+          <button
+            onClick={onClose}
+            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+        
+        <div className="p-6">
+          {/* Basic Information */}
+          <div className="mb-8">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">📋 Basic Information</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <p className="text-sm text-gray-600 dark:text-gray-400">Takeoff Name</p>
+                <p className="font-medium text-gray-900 dark:text-gray-100">{takeoff.name}</p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-600 dark:text-gray-400">Type</p>
+                <p className="font-medium text-gray-900 dark:text-gray-100 capitalize">{takeoff.type}</p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-600 dark:text-gray-400">Status</p>
+                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                  takeoff.status === 'completed' ? 'bg-green-100 text-green-800' :
+                  takeoff.status === 'in_progress' ? 'bg-blue-100 text-blue-800' :
+                  'bg-gray-100 text-gray-800'
+                }`}>
+                  {takeoff.status}
+                </span>
+              </div>
+              <div>
+                <p className="text-sm text-gray-600 dark:text-gray-400">Project Address</p>
+                <p className="font-medium text-gray-900 dark:text-gray-100">{takeoff.projectAddress}</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Measurements Summary (for roofing) */}
+          {takeoff.type === 'roofing' && (takeoff.totalSquareFeet || takeoff.totalBundles) && (
+            <div className="mb-8">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">📐 Measurements Summary</h3>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-6 bg-gradient-to-r from-green-500 to-blue-500 text-white rounded-lg p-6">
+                {takeoff.totalSquareFeet && (
+                  <div className="text-center">
+                    <div className="text-2xl font-bold">{takeoff.totalSquareFeet.toLocaleString()}</div>
+                    <div className="text-sm opacity-90">Total Square Feet</div>
+                  </div>
+                )}
+                {takeoff.totalBundles && (
+                  <div className="text-center">
+                    <div className="text-2xl font-bold">{takeoff.totalBundles}</div>
+                    <div className="text-sm opacity-90">Shingle Bundles</div>
+                  </div>
+                )}
+                {takeoff.totalUnderlayment && (
+                  <div className="text-center">
+                    <div className="text-2xl font-bold">{takeoff.totalUnderlayment}</div>
+                    <div className="text-sm opacity-90">Underlayment Rolls</div>
+                  </div>
+                )}
+                <div className="text-center">
+                  <div className="text-2xl font-bold">{formatCurrency(takeoff.actualCost || takeoff.estimatedValue || 0)}</div>
+                  <div className="text-sm opacity-90">Total Cost</div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Material Selections */}
+          {takeoff.manufacturerSelections && takeoff.manufacturerSelections.length > 0 && (
+            <div className="mb-8">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">🏗️ Material Selections</h3>
+              <div className="space-y-4">
+                {takeoff.manufacturerSelections.map((selection: any, index: number) => (
+                  <div key={index} className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">Manufacturer</p>
+                        <p className="font-medium text-gray-900 dark:text-gray-100">{selection.manufacturerName}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">Product Line</p>
+                        <p className="font-medium text-gray-900 dark:text-gray-100">{selection.productLineName}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">Color</p>
+                        <div className="flex items-center gap-2">
+                          {selection.colorHex && (
+                            <div 
+                              className="w-4 h-4 rounded border border-gray-300"
+                              style={{ backgroundColor: selection.colorHex }}
+                            />
+                          )}
+                          <p className="font-medium text-gray-900 dark:text-gray-100">{selection.colorName}</p>
+                        </div>
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">Price per {selection.unit}</p>
+                        <p className="font-medium text-gray-900 dark:text-gray-100">${selection.pricePerUnit}</p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Timeline */}
+          <div className="mb-8">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">📅 Timeline</h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <p className="text-sm text-gray-600 dark:text-gray-400">Created</p>
+                <p className="font-medium text-gray-900 dark:text-gray-100">
+                  {takeoff.createdDate ? new Date(takeoff.createdDate).toLocaleDateString() : 'Not specified'}
+                </p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-600 dark:text-gray-400">Last Updated</p>
+                <p className="font-medium text-gray-900 dark:text-gray-100">
+                  {takeoff.updatedDate ? new Date(takeoff.updatedDate).toLocaleDateString() : 'Not specified'}
+                </p>
+              </div>
+              {takeoff.completedDate && (
+                <div>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">Completed</p>
+                  <p className="font-medium text-gray-900 dark:text-gray-100">
+                    {new Date(takeoff.completedDate).toLocaleDateString()}
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Notes */}
+          {takeoff.notes && (
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">📝 Notes</h3>
+              <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+                <p className="text-gray-900 dark:text-gray-100">{takeoff.notes}</p>
+              </div>
+            </div>
+          )}
+        </div>
+        
+        <div className="flex justify-between space-x-3 p-6 border-t dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
+          <button
+            onClick={() => onEdit?.(takeoff)}
+            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors inline-flex items-center"
+          >
+            <Edit className="w-4 h-4 mr-2" />
+            Edit Takeoff
+          </button>
+          <button
+            onClick={onClose}
+            className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-colors"
+          >
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 export const Customers: React.FC = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [filteredCustomers, setFilteredCustomers] = useState<Customer[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState<CustomerStatus | 'all'>('all');
   const [showAddModal, setShowAddModal] = useState(false);
   const [showDetailModal, setShowDetailModal] = useState(false);
+  const [showTakeoffModal, setShowTakeoffModal] = useState(false);
   const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null);
   const [viewingCustomer, setViewingCustomer] = useState<Customer | null>(null);
+  const [viewingTakeoff, setViewingTakeoff] = useState<any>(null);
   const [stats, setStats] = useState<CustomerStats>({
     activeProjects: 0,
     closedProjects: 0,
@@ -467,19 +748,57 @@ export const Customers: React.FC = () => {
   useEffect(() => {
     const savedCustomers = localStorage.getItem('averageJoeCustomers');
     if (savedCustomers) {
-      const parsed = JSON.parse(savedCustomers).map((c: any) => ({
-        ...c,
-        lastContact: new Date(c.lastContact),
-        createdDate: new Date(c.createdDate),
-        updatedDate: new Date(c.updatedDate)
-      }));
-      setCustomers(parsed);
+      try {
+        const parsed = JSON.parse(savedCustomers).map((c: any) => ({
+          ...c,
+          lastContact: new Date(c.lastContact),
+          createdDate: new Date(c.createdDate),
+          updatedDate: new Date(c.updatedDate),
+          projects: c.projects?.map((p: any) => ({
+            ...p,
+            createdDate: new Date(p.createdDate),
+            updatedDate: new Date(p.updatedDate),
+            completedDate: p.completedDate ? new Date(p.completedDate) : undefined,
+            takeoffs: p.takeoffs?.map((t: any) => ({
+              ...t,
+              createdDate: new Date(t.createdDate),
+              updatedDate: new Date(t.updatedDate),
+              completedDate: t.completedDate ? new Date(t.completedDate) : undefined,
+              sentDate: t.sentDate ? new Date(t.sentDate) : undefined
+            })) || []
+          })) || []
+        }));
+        setCustomers(parsed);
+      } catch (error) {
+        console.error('Error parsing saved customers:', error);
+        // Fall back to mock data if parsing fails
+        setCustomers(MOCK_CUSTOMERS);
+        localStorage.setItem('averageJoeCustomers', JSON.stringify(MOCK_CUSTOMERS));
+      }
     } else {
       // Use mock data for first time
       setCustomers(MOCK_CUSTOMERS);
       localStorage.setItem('averageJoeCustomers', JSON.stringify(MOCK_CUSTOMERS));
     }
   }, []);
+
+  // Handle URL parameters to open specific customer profiles
+  useEffect(() => {
+    if (customers.length > 0) {
+      const customerId = searchParams.get('customerId');
+      const action = searchParams.get('action');
+      
+      if (customerId && action === 'view') {
+        const customer = customers.find(c => c.id === customerId);
+        if (customer) {
+          setViewingCustomer(customer);
+          setShowDetailModal(true);
+          // Clear the URL parameters after opening modal
+          setSearchParams(new URLSearchParams());
+        }
+      }
+    }
+  }, [customers, searchParams, setSearchParams]);
 
   // Update filtered customers when search term or filter changes
   useEffect(() => {
@@ -564,6 +883,29 @@ export const Customers: React.FC = () => {
     window.open(`mailto:${customer.email}?subject=Regarding your ${customer.projectType} project`);
   };
 
+  const handleViewTakeoff = (takeoff: any) => {
+    console.log('handleViewTakeoff called with:', takeoff);
+    setViewingTakeoff(takeoff);
+    setShowTakeoffModal(true);
+  };
+
+  const handleEditTakeoff = (takeoff: any) => {
+    // Store the takeoff data in localStorage for the RoofingCalculator to load
+    localStorage.setItem('editingTakeoff', JSON.stringify(takeoff));
+    
+    // Also store a flag to trigger the calculator view
+    localStorage.setItem('openCalculator', 'true');
+    
+    // Navigate to the takeoffs page
+    navigate('/takeoffs');
+    
+    // Close the modals
+    setShowTakeoffModal(false);
+    setShowDetailModal(false);
+    setViewingTakeoff(null);
+    setViewingCustomer(null);
+  };
+
   const handleViewCustomer = (customer: Customer) => {
     setViewingCustomer(customer);
     setShowDetailModal(true);
@@ -617,7 +959,7 @@ export const Customers: React.FC = () => {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Customer Management</h1>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">Customer Management</h1>
           <p className="text-gray-600 mt-2">Manage your customers and track project leads</p>
         </div>
         <button
@@ -689,7 +1031,7 @@ export const Customers: React.FC = () => {
       {/* Customer List */}
       <div className="bg-white rounded-lg shadow">
         <div className="px-6 py-4 border-b">
-          <h2 className="text-lg font-semibold text-gray-900">Customers</h2>
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Customers</h2>
         </div>
         
         {filteredCustomers.length === 0 ? (
@@ -738,14 +1080,14 @@ export const Customers: React.FC = () => {
                       <td className="px-6 py-4">
                         <div className="flex items-center">
                           <div>
-                            <div className="text-sm font-medium text-gray-900">{customer.name}</div>
+                            <div className="text-sm font-medium text-gray-900 dark:text-gray-100">{customer.name}</div>
                             <div className="text-sm text-gray-500">{customer.email}</div>
                             <div className="text-sm text-gray-500">{customer.phone}</div>
                           </div>
                         </div>
                       </td>
                       <td className="px-6 py-4">
-                        <div className="text-sm text-gray-900">{projectTypeLabel}</div>
+                        <div className="text-sm text-gray-900 dark:text-gray-100">{projectTypeLabel}</div>
                         <div className="text-sm text-gray-500 truncate max-w-xs">{customer.projectAddress}</div>
                       </td>
                       <td className="px-6 py-4">
@@ -753,10 +1095,10 @@ export const Customers: React.FC = () => {
                           {STATUS_LABELS[customer.status]}
                         </span>
                       </td>
-                      <td className="px-6 py-4 text-sm text-gray-900">
+                      <td className="px-6 py-4 text-sm text-gray-900 dark:text-gray-100">
                         ${customer.estimatedValue.toLocaleString()}
                       </td>
-                      <td className="px-6 py-4 text-sm text-gray-900">
+                      <td className="px-6 py-4 text-sm text-gray-900 dark:text-gray-100">
                         {customer.lastContact.toLocaleDateString()}
                       </td>
                       <td className="px-6 py-4 text-right text-sm font-medium">
@@ -822,6 +1164,18 @@ export const Customers: React.FC = () => {
         onEdit={() => handleEditCustomer(viewingCustomer!)}
         onDelete={() => handleDeleteCustomer(viewingCustomer!.id)}
         onEmail={() => handleEmailCustomer(viewingCustomer!)}
+        onViewTakeoff={handleViewTakeoff}
+      />
+
+      {/* Takeoff Detail Modal */}
+      <TakeoffDetailModal
+        takeoff={viewingTakeoff}
+        isOpen={showTakeoffModal}
+        onClose={() => {
+          setShowTakeoffModal(false);
+          setViewingTakeoff(null);
+        }}
+        onEdit={handleEditTakeoff}
       />
     </div>
   );

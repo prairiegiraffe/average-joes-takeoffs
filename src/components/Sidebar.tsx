@@ -6,7 +6,8 @@ import {
   Users, 
   Truck, 
   Shield, 
-  Calculator 
+  Calculator,
+  Building
 } from 'lucide-react';
 import type { NavigationItem } from '../types';
 
@@ -15,7 +16,7 @@ const navigationItems: NavigationItem[] = [
   { id: 'profile', name: 'Contractor Profile', href: '/profile', icon: User, current: false },
   { id: 'customers', name: 'Customers', href: '/customers', icon: Users, current: false },
   { id: 'distributors', name: 'Distributors', href: '/distributors', icon: Truck, current: false },
-  { id: 'insurance', name: 'Insurance', href: '/insurance', icon: Shield, current: false },
+  { id: 'manufacturers', name: 'Manufacturers', href: '/manufacturers', icon: Building, current: false },
   { id: 'takeoffs', name: 'Takeoffs', href: '/takeoffs', icon: Calculator, current: false },
 ];
 
@@ -67,8 +68,8 @@ export const Sidebar: React.FC = () => {
         <div className="flex-shrink-0 flex border-t border-gray-700 p-4">
           <div className="flex items-center w-full">
             <div className="text-xs text-gray-400">
-              <div className="font-medium">Version 1.4.0</div>
-              <div>Customer Management</div>
+              <div className="font-medium">Version 2.0.0</div>
+              <div>Dark Mode & Themes</div>
             </div>
           </div>
         </div>
