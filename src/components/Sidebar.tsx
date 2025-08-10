@@ -67,8 +67,8 @@ export const Sidebar: React.FC = () => {
         <div className="flex-shrink-0 flex border-t border-gray-700 p-4">
           <div className="flex items-center w-full">
             <div className="text-xs text-gray-400">
-              <div className="font-medium">Version 1.3.0</div>
-              <div>Document Management</div>
+              <div className="font-medium">Version 1.4.0</div>
+              <div>Customer Management</div>
             </div>
           </div>
         </div>
