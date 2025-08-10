@@ -4,6 +4,7 @@ import { getCurrentUser, logoutUser, isSuperAdmin, isContractor } from './utils/
 import Login from './components/Login';
 import AdminDashboard from './components/AdminDashboard';
 import RoofingCalculator from './components/RoofingCalculator';
+import { Profile } from './pages/Profile';
 
 const mockProjects = [
   {
@@ -167,14 +168,6 @@ const Layout = ({ children, user, onLogout }) => (
 );
 
 // Placeholder pages
-const Profile = () => (
-  <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-    <h1 className="text-3xl font-bold text-gray-900 mb-8">Contractor Profile</h1>
-    <div className="bg-white rounded-lg shadow p-6">
-      <p className="text-gray-600">Profile page coming soon...</p>
-    </div>
-  </div>
-);
 
 const Customers = () => (
   <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
