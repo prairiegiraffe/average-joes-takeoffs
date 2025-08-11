@@ -3,12 +3,14 @@ import { Plus, Search, Filter, Calendar, DollarSign, MapPin, User, FileText, Pla
 import { useSearchParams } from 'react-router-dom';
 import RoofingCalculator from '../components/RoofingCalculator';
 import SidingCalculator from '../components/SidingCalculator';
+import StoneSidingCalculator from '../components/StoneSidingCalculator';
 import type { TakeoffProject, TakeoffType, TakeoffStatus, Customer, Manufacturer, ManufacturerSelection, ManufacturerCategory } from '../types';
 
 // Takeoff type configurations
 const TAKEOFF_TYPES: { id: TakeoffType; name: string; icon: string; color: string; description: string }[] = [
   { id: 'roofing', name: 'Roofing', icon: '🏠', color: 'bg-blue-100 text-blue-800', description: 'Complete roofing takeoff with elevation workflow' },
   { id: 'siding', name: 'Siding', icon: '🏘️', color: 'bg-teal-100 text-teal-800', description: 'Siding material and labor estimation' },
+  { id: 'stone', name: 'Stone Siding', icon: '🧱', color: 'bg-stone-100 text-stone-800', description: 'Stone siding takeoff with panel and corner calculations' },
   { id: 'windows', name: 'Windows', icon: '🪟', color: 'bg-cyan-100 text-cyan-800', description: 'Window installation and replacement' },
   { id: 'gutters', name: 'Gutters', icon: '🌧️', color: 'bg-indigo-100 text-indigo-800', description: 'Gutter system installation and repair' },
   { id: 'insulation', name: 'Insulation', icon: '🧊', color: 'bg-purple-100 text-purple-800', description: 'Insulation installation and upgrades' },
@@ -105,6 +107,18 @@ export const Takeoffs: React.FC = () => {
     if (shouldOpenCalculator === 'true') {
       setCurrentView('calculator');
       localStorage.removeItem('openCalculator');
+      
+      // Load the takeoff being edited
+      const editingTakeoffData = localStorage.getItem('editingTakeoff');
+      if (editingTakeoffData) {
+        try {
+          const takeoffToEdit = JSON.parse(editingTakeoffData);
+          setSelectedTakeoff(takeoffToEdit);
+          console.log('Takeoffs page - Loaded takeoff for editing:', takeoffToEdit);
+        } catch (error) {
+          console.error('Error loading takeoff for editing:', error);
+        }
+      }
     }
     
     // Load takeoffs from multiple sources
@@ -320,6 +334,15 @@ export const Takeoffs: React.FC = () => {
     setCurrentView('calculator');
   };
 
+  // Handle starting a stone siding calculator for a takeoff
+  const handleStartStoneSidingCalculator = (takeoff: TakeoffProject) => {
+    // Store the takeoff data for editing
+    localStorage.setItem('editingTakeoff', JSON.stringify(takeoff));
+    
+    setSelectedTakeoff(takeoff);
+    setCurrentView('calculator');
+  };
+
   // Refresh takeoffs from localStorage
   const refreshTakeoffs = () => {
     const savedTakeoffProjects = localStorage.getItem('takeoff-projects');
@@ -374,6 +397,7 @@ export const Takeoffs: React.FC = () => {
         </div>
         {selectedTakeoff?.type === 'roofing' && <RoofingCalculator />}
         {selectedTakeoff?.type === 'siding' && <SidingCalculator />}
+        {selectedTakeoff?.type === 'stone' && <StoneSidingCalculator />}
       </div>
     );
   }
@@ -598,6 +622,15 @@ export const Takeoffs: React.FC = () => {
                         Edit
                       </button>
                     )}
+
+                    {takeoff.type === 'stone' && (
+                      <button 
+                        onClick={() => handleStartStoneSidingCalculator(takeoff)}
+                        className="px-3 py-2 text-sm bg-gray-600 hover:bg-gray-700 text-white rounded-md transition-colors"
+                      >
+                        Edit
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>
@@ -632,8 +665,8 @@ export const Takeoffs: React.FC = () => {
             setTakeoffs(prev => [takeoffWithId, ...prev]);
             setShowNewTakeoffModal(false);
             
-            // If it's a roofing or siding takeoff, start the calculator immediately
-            if (newTakeoff.type === 'roofing' || newTakeoff.type === 'siding') {
+            // If it's a roofing, siding, or stone takeoff, start the calculator immediately
+            if (newTakeoff.type === 'roofing' || newTakeoff.type === 'siding' || newTakeoff.type === 'stone') {
               setSelectedTakeoff(takeoffWithId);
               setCurrentView('calculator');
             }
@@ -649,7 +682,7 @@ export const Takeoffs: React.FC = () => {
             setSelectedTakeoff(null);
           }}
           onStartCalculator={
-            selectedTakeoff.type === 'roofing' || selectedTakeoff.type === 'siding'
+            selectedTakeoff.type === 'roofing' || selectedTakeoff.type === 'siding' || selectedTakeoff.type === 'stone'
               ? () => {
                   setShowTakeoffDetail(false);
                   setCurrentView('calculator');
@@ -781,6 +814,7 @@ const ManufacturerSelectionModal: React.FC<ManufacturerSelectionModalProps> = ({
     { id: 'all', name: 'All Categories' },
     { id: 'roofing', name: 'Roofing' },
     { id: 'siding', name: 'Siding' },
+    { id: 'stone', name: 'Stone Siding' },
     { id: 'windows', name: 'Windows' },
     { id: 'gutters', name: 'Gutters' },
     { id: 'insulation', name: 'Insulation' },

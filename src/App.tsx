@@ -118,10 +118,10 @@ const Sidebar = ({ user, onLogout }) => {
           {/* Version Number */}
           <div className="px-4 pb-2">
             <div className="text-xs text-white font-medium">
-              Version 2.0.0
+              Version 1.5.0
             </div>
             <div className="text-xs text-gray-300">
-              Dark Mode & Themes
+              Roofing & Siding Calculators
             </div>
           </div>
           

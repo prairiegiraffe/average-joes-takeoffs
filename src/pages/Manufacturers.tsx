@@ -14,6 +14,7 @@ import type {
 const MANUFACTURER_CATEGORIES: { id: ManufacturerCategory; name: string; icon: string; color: string }[] = [
   { id: 'roofing', name: 'Roofing', icon: '🏠', color: 'bg-blue-100 text-blue-800' },
   { id: 'siding', name: 'Siding', icon: '🏘️', color: 'bg-teal-100 text-teal-800' },
+  { id: 'stone', name: 'Stone Siding', icon: '🧱', color: 'bg-stone-100 text-stone-800' },
   { id: 'windows', name: 'Windows', icon: '🪟', color: 'bg-cyan-100 text-cyan-800' },
   { id: 'gutters', name: 'Gutters', icon: '🌧️', color: 'bg-indigo-100 text-indigo-800' },
   { id: 'insulation', name: 'Insulation', icon: '🧊', color: 'bg-purple-100 text-purple-800' },
@@ -287,6 +288,87 @@ const createSampleManufacturers = (): Manufacturer[] => [
     createdDate: new Date('2024-01-15'),
     updatedDate: new Date('2024-01-15'),
     isActive: true
+  },
+  {
+    id: '4',
+    name: 'Versetta Stone',
+    website: 'https://www.versettastone.com',
+    phone: '1-800-255-1727',
+    email: 'info@versettastone.com',
+    categories: ['stone'],
+    productLines: [
+      {
+        id: 'versetta-ledgestone',
+        name: 'Versetta Stone Ledgestone',
+        description: 'Authentic stone appearance with easy installation',
+        category: 'stone',
+        colors: [
+          { id: 'canyon', name: 'Canyon', hexCode: '#B8860B', isPopular: true },
+          { id: 'charcoal', name: 'Charcoal', hexCode: '#36454F', isPopular: true },
+          { id: 'weathered-blend', name: 'Weathered Blend', hexCode: '#8B7355', isPopular: true },
+          { id: 'timber', name: 'Timber', hexCode: '#8B4513' }
+        ],
+        pricePerUnit: 4.50,
+        unit: 'sq_ft',
+        hardware: [
+          {
+            id: 'versetta-clips',
+            name: 'Versetta Stone Clips',
+            description: 'Specialized clips for Versetta Stone installation',
+            pricePerUnit: 125.00,
+            unit: 'box',
+            calculationMethod: 'per_square_foot',
+            calculationValue: 0.02,
+            isRequired: true,
+            category: 'hardware'
+          },
+          {
+            id: 'versetta-screws',
+            name: 'Stone Fastening Screws',
+            description: 'Self-drilling screws for stone attachment',
+            pricePerUnit: 85.00,
+            unit: 'box',
+            calculationMethod: 'per_square_foot',
+            calculationValue: 0.015,
+            isRequired: true,
+            category: 'fastener'
+          }
+        ],
+        isActive: true
+      },
+      {
+        id: 'versetta-tightcut',
+        name: 'Versetta Stone Tight Cut',
+        description: 'Precision-cut stone veneer for contemporary looks',
+        category: 'stone',
+        colors: [
+          { id: 'canyon', name: 'Canyon', hexCode: '#B8860B', isPopular: true },
+          { id: 'charcoal', name: 'Charcoal', hexCode: '#36454F', isPopular: true },
+          { id: 'ivory', name: 'Ivory', hexCode: '#FFFFF0' }
+        ],
+        pricePerUnit: 4.75,
+        unit: 'sq_ft',
+        hardware: [
+          {
+            id: 'versetta-tightcut-clips',
+            name: 'Tight Cut Installation Clips',
+            description: 'Precision clips for Tight Cut stone panels',
+            pricePerUnit: 135.00,
+            unit: 'box',
+            calculationMethod: 'per_square_foot',
+            calculationValue: 0.022,
+            isRequired: true,
+            category: 'hardware'
+          }
+        ],
+        isActive: true
+      }
+    ],
+    isGlobal: true,
+    createdBy: 'admin',
+    createdDate: new Date('2024-01-15'),
+    updatedDate: new Date('2024-01-15'),
+    isActive: true
   }
 ];
 
@@ -313,7 +395,64 @@ export const Manufacturers: React.FC = () => {
       console.log('Manufacturers page: Found existing data');
       const parsed = JSON.parse(savedManufacturers);
       console.log('Manufacturers page: Loaded', parsed.length, 'manufacturers');
-      const manufacturersWithDates = parsed.map((mfg: any) => ({
+      
+      // Check if Versetta Stone exists, if not add it
+      const hasVersettaStone = parsed.some((mfg: any) => mfg.name === 'Versetta Stone');
+      
+      let updatedManufacturers = parsed;
+      if (!hasVersettaStone) {
+        console.log('Adding Versetta Stone test manufacturer...');
+        const versettaStone = {
+          id: Date.now().toString(),
+          name: 'Versetta Stone',
+          website: 'https://www.versettastone.com',
+          phone: '1-800-255-1727',
+          email: 'info@versettastone.com',
+          categories: ['stone'],
+          productLines: [
+            {
+              id: 'versetta-ledgestone',
+              name: 'Versetta Stone Ledgestone',
+              description: 'Authentic stone appearance with easy installation',
+              category: 'stone',
+              colors: [
+                { id: 'canyon', name: 'Canyon', hexCode: '#B8860B', isPopular: true },
+                { id: 'charcoal', name: 'Charcoal', hexCode: '#36454F', isPopular: true },
+                { id: 'weathered-blend', name: 'Weathered Blend', hexCode: '#8B7355', isPopular: true },
+                { id: 'timber', name: 'Timber', hexCode: '#8B4513' }
+              ],
+              pricePerUnit: 4.50,
+              unit: 'sq_ft',
+              hardware: [],
+              isActive: true
+            },
+            {
+              id: 'versetta-tightcut',
+              name: 'Versetta Stone Tight Cut',
+              description: 'Precision-cut stone veneer for contemporary looks',
+              category: 'stone',
+              colors: [
+                { id: 'canyon', name: 'Canyon', hexCode: '#B8860B', isPopular: true },
+                { id: 'charcoal', name: 'Charcoal', hexCode: '#36454F', isPopular: true },
+                { id: 'ivory', name: 'Ivory', hexCode: '#FFFFF0' }
+              ],
+              pricePerUnit: 4.75,
+              unit: 'sq_ft',
+              hardware: [],
+              isActive: true
+            }
+          ],
+          isGlobal: true,
+          createdBy: 'admin',
+          createdDate: new Date(),
+          updatedDate: new Date(),
+          isActive: true
+        };
+        updatedManufacturers = [...parsed, versettaStone];
+        localStorage.setItem('manufacturers', JSON.stringify(updatedManufacturers));
+      }
+      
+      const manufacturersWithDates = updatedManufacturers.map((mfg: any) => ({
         ...mfg,
         createdDate: new Date(mfg.createdDate),
         updatedDate: new Date(mfg.updatedDate)

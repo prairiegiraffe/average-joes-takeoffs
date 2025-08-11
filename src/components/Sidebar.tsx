@@ -68,8 +68,8 @@ export const Sidebar: React.FC = () => {
         <div className="flex-shrink-0 flex border-t border-gray-700 p-4">
           <div className="flex items-center w-full">
             <div className="text-xs text-gray-400">
-              <div className="font-medium">Version 2.0.0</div>
-              <div>Dark Mode & Themes</div>
+              <div className="font-medium">Version 1.5.0</div>
+              <div>Roofing & Siding Calculators</div>
             </div>
           </div>
         </div>

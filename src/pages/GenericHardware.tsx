@@ -35,6 +35,7 @@ export default function GenericHardware() {
     { value: 'all', label: 'All Takeoff Types' },
     { value: 'roofing', label: 'Roofing' },
     { value: 'siding', label: 'Siding' },
+    { value: 'stone', label: 'Stone Siding' },
     { value: 'windows', label: 'Windows' },
     { value: 'gutters', label: 'Gutters' },
     { value: 'insulation', label: 'Insulation' },
@@ -411,6 +412,7 @@ export default function GenericHardware() {
                   >
                     <option value="roofing">Roofing</option>
                     <option value="siding">Siding</option>
+                    <option value="stone">Stone Siding</option>
                     <option value="windows">Windows</option>
                     <option value="gutters">Gutters</option>
                     <option value="insulation">Insulation</option>

@@ -203,7 +203,7 @@ export interface ProjectInvitation {
   sentDate: Date;
 }
 
-export type TakeoffType = 'roofing' | 'siding' | 'windows' | 'gutters' | 'insulation' | 'flooring' | 'drywall' | 'painting' | 'general';
+export type TakeoffType = 'roofing' | 'siding' | 'stone' | 'windows' | 'gutters' | 'insulation' | 'flooring' | 'drywall' | 'painting' | 'general';
 
 export type TakeoffStatus = 'draft' | 'in_progress' | 'completed' | 'sent' | 'approved' | 'declined';
 
@@ -242,7 +242,7 @@ export interface TakeoffTemplate {
 }
 
 // Manufacturer System Types
-export type ManufacturerCategory = 'roofing' | 'siding' | 'windows' | 'gutters' | 'insulation' | 'flooring' | 'drywall' | 'painting' | 'general';
+export type ManufacturerCategory = 'roofing' | 'siding' | 'stone' | 'windows' | 'gutters' | 'insulation' | 'flooring' | 'drywall' | 'painting' | 'general';
 
 export interface ProductColor {
   id: string;
