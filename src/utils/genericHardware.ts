@@ -351,6 +351,147 @@ export const GENERIC_HARDWARE: HardwareAccessory[] = [
     calculationValue: 1,
     isRequired: false,
     category: 'siding'
+  },
+
+  // STONE SIDING HARDWARE ITEMS
+  // Stone Installation Hardware
+  {
+    id: 'generic-stone-screws',
+    name: 'Stone Siding Screws (3")',
+    description: 'Self-drilling masonry screws for stone siding',
+    sku: 'GSS-STONE-300',
+    pricePerUnit: 85.00,
+    unit: 'box',
+    calculationMethod: 'per_square_foot',
+    calculationValue: 0.015, // 1 box per ~65 sq ft
+    isRequired: false,
+    category: 'stone'
+  },
+  {
+    id: 'generic-stone-clips',
+    name: 'Stone Panel Clips',
+    description: 'Metal clips for securing stone panels',
+    sku: 'GSC-CLIP',
+    pricePerUnit: 125.00,
+    unit: 'box',
+    calculationMethod: 'per_square_foot',
+    calculationValue: 0.02, // 1 box per 50 sq ft
+    isRequired: false,
+    category: 'stone'
+  },
+  {
+    id: 'generic-stone-anchors',
+    name: 'Masonry Anchors',
+    description: 'Heavy-duty masonry anchors for stone attachment',
+    sku: 'GSA-MASONR',
+    pricePerUnit: 95.00,
+    unit: 'box',
+    calculationMethod: 'per_square_foot',
+    calculationValue: 0.01, // 1 box per 100 sq ft
+    isRequired: false,
+    category: 'stone'
+  },
+
+  // Stone Accessories & Trim
+  {
+    id: 'generic-stone-corner-trim',
+    name: 'Stone Corner Trim',
+    description: 'Pre-fabricated stone corner trim pieces',
+    sku: 'GSCT-CORNER',
+    pricePerUnit: 24.50,
+    unit: 'linear_ft',
+    calculationMethod: 'fixed_quantity',
+    calculationValue: 0,
+    isRequired: false,
+    category: 'stone'
+  },
+  {
+    id: 'generic-stone-j-channel',
+    name: 'Stone J-Channel',
+    description: 'Specialty J-channel for stone siding applications',
+    sku: 'GSJC-STONE',
+    pricePerUnit: 8.75,
+    unit: 'linear_ft',
+    calculationMethod: 'fixed_quantity',
+    calculationValue: 0,
+    isRequired: false,
+    category: 'stone'
+  },
+  {
+    id: 'generic-starter-strip-stone',
+    name: 'Stone Starter Strip',
+    description: 'Bottom starter strip for first stone course',
+    sku: 'GSSS-START',
+    pricePerUnit: 6.25,
+    unit: 'linear_ft',
+    calculationMethod: 'per_square_foot',
+    calculationValue: 0.08, // perimeter estimate for stone
+    isRequired: false,
+    category: 'stone'
+  },
+
+  // Weather Protection & Sealants
+  {
+    id: 'generic-stone-barrier',
+    name: 'Stone Weather Barrier',
+    description: 'Specialized weather barrier for stone installation',
+    sku: 'GSWB-STONE',
+    pricePerUnit: 95.00,
+    unit: 'roll',
+    calculationMethod: 'per_square_foot',
+    calculationValue: 0.003, // 1 roll per ~350 sq ft
+    isRequired: false,
+    category: 'stone'
+  },
+  {
+    id: 'generic-stone-sealant',
+    name: 'Stone Sealant',
+    description: 'High-performance sealant for stone joints',
+    sku: 'GSS-SEAL',
+    pricePerUnit: 18.50,
+    unit: 'tube',
+    calculationMethod: 'per_linear_foot',
+    calculationValue: 0.03, // 1 tube per ~35 lin ft
+    isRequired: false,
+    category: 'stone'
+  },
+  {
+    id: 'generic-stone-mortar',
+    name: 'Stone Mortar Mix',
+    description: 'Polymer-modified mortar for stone installation',
+    sku: 'GSM-POLY',
+    pricePerUnit: 45.00,
+    unit: 'bag',
+    calculationMethod: 'per_square_foot',
+    calculationValue: 0.02, // 1 bag per 50 sq ft
+    isRequired: false,
+    category: 'stone'
+  },
+
+  // Stone Flashing & Waterproofing
+  {
+    id: 'generic-stone-flashing',
+    name: 'Stone Panel Flashing',
+    description: 'Self-adhesive flashing for stone panel joints',
+    sku: 'GSPF-FLASH',
+    pricePerUnit: 12.50,
+    unit: 'linear_ft',
+    calculationMethod: 'fixed_quantity',
+    calculationValue: 0,
+    isRequired: false,
+    category: 'stone'
+  },
+  {
+    id: 'generic-weep-holes',
+    name: 'Weep Hole Vents',
+    description: 'Drainage vents for stone cavity walls',
+    sku: 'GWHV-VENT',
+    pricePerUnit: 2.85,
+    unit: 'piece',
+    calculationMethod: 'per_linear_foot',
+    calculationValue: 0.1, // 1 per 10 lin ft
+    isRequired: false,
+    category: 'stone'
   }
 ];
 
@@ -365,6 +506,10 @@ export function getGenericHardwareByCategory(category: ManufacturerCategory): Ha
   
   if (category === 'siding') {
     return GENERIC_HARDWARE.filter(item => item.category === 'siding');
+  }
+  
+  if (category === 'stone') {
+    return GENERIC_HARDWARE.filter(item => item.category === 'stone');
   }
   
   // For other categories, return a subset that might be relevant

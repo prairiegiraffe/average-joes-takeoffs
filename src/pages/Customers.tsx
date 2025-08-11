@@ -391,7 +391,7 @@ const CustomerDetailModal: React.FC<CustomerDetailModalProps> = ({
                 <DollarSign className="w-5 h-5 text-gray-400" />
                 <div>
                   <p className="text-sm text-gray-600">Estimated Value</p>
-                  <p className="font-medium text-gray-900 dark:text-gray-100">${customer.estimatedValue.toLocaleString()}</p>
+                  <p className="font-medium text-gray-900 dark:text-gray-100">${customer.estimatedValue?.toLocaleString() || 'TBD'}</p>
                 </div>
               </div>
               
@@ -442,7 +442,7 @@ const CustomerDetailModal: React.FC<CustomerDetailModalProps> = ({
                       </div>
                       <div>
                         <span className="text-gray-600 dark:text-gray-400">Value: </span>
-                        <span className="text-gray-900 dark:text-gray-100">${project.estimatedValue.toLocaleString()}</span>
+                        <span className="text-gray-900 dark:text-gray-100">${project.estimatedValue?.toLocaleString() || 'TBD'}</span>
                       </div>
                     </div>
 
@@ -463,7 +463,7 @@ const CustomerDetailModal: React.FC<CustomerDetailModalProps> = ({
                                   <p className="font-medium text-gray-900 dark:text-gray-100">{takeoff.name}</p>
                                   <p className="text-gray-600 dark:text-gray-400">Type: {takeoff.type}</p>
                                   {takeoff.actualCost && (
-                                    <p className="text-gray-600 dark:text-gray-400">Cost: ${takeoff.actualCost.toLocaleString()}</p>
+                                    <p className="text-gray-600 dark:text-gray-400">Cost: ${takeoff.actualCost?.toLocaleString() || 'TBD'}</p>
                                   )}
                                 </div>
                                 <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
@@ -542,6 +542,9 @@ interface TakeoffDetailModalProps {
 const TakeoffDetailModal: React.FC<TakeoffDetailModalProps> = ({ takeoff, isOpen, onClose, onEdit }) => {
   console.log('TakeoffDetailModal - isOpen:', isOpen, 'takeoff:', takeoff);
   if (!isOpen || !takeoff) return null;
+
+  // Add error boundary for debugging stone takeoffs
+  try {
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-US', {
@@ -720,6 +723,27 @@ const TakeoffDetailModal: React.FC<TakeoffDetailModalProps> = ({ takeoff, isOpen
       </div>
     </div>
   );
+  
+  } catch (error) {
+    console.error('Error in TakeoffDetailModal:', error, 'takeoff:', takeoff);
+    return (
+      <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full mx-4 p-6">
+          <h3 className="text-lg font-semibold text-red-600 mb-2">Error Loading Takeoff Details</h3>
+          <p className="text-gray-600 mb-4">There was an error loading this takeoff. Please try again.</p>
+          <p className="text-sm text-gray-500 mb-4">Takeoff Type: {takeoff?.type || 'Unknown'}</p>
+          <div className="flex justify-end space-x-3">
+            <button
+              onClick={onClose}
+              className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-colors"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 };
 
 export const Customers: React.FC = () => {
@@ -1096,7 +1120,7 @@ export const Customers: React.FC = () => {
                         </span>
                       </td>
                       <td className="px-6 py-4 text-sm text-gray-900 dark:text-gray-100">
-                        ${customer.estimatedValue.toLocaleString()}
+                        ${customer.estimatedValue?.toLocaleString() || 'TBD'}
                       </td>
                       <td className="px-6 py-4 text-sm text-gray-900 dark:text-gray-100">
                         {customer.lastContact.toLocaleDateString()}
