@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { 
   Home, 
@@ -9,7 +9,8 @@ import {
   Calculator,
   Building
 } from 'lucide-react';
-import type { NavigationItem } from '../types';
+import type { NavigationItem, ContractorProfile } from '../types';
+import { getCurrentUser } from '../utils/auth';
 
 const navigationItems: NavigationItem[] = [
   { id: 'home', name: 'Home', href: '/', icon: Home, current: false },
@@ -22,6 +23,39 @@ const navigationItems: NavigationItem[] = [
 
 export const Sidebar: React.FC = () => {
   const location = useLocation();
+  const [contractorProfile, setContractorProfile] = useState<ContractorProfile | null>(null);
+
+  useEffect(() => {
+    const currentUser = getCurrentUser();
+    console.log('Sidebar - currentUser:', currentUser);
+    
+    if (currentUser) {
+      // Always create a fresh, complete profile
+      const completeProfile: ContractorProfile = {
+        businessName: currentUser.company || 'Smith Roofing LLC',
+        contactName: currentUser.name || 'John Smith',
+        email: currentUser.email || 'john@smithroofing.com',
+        phone: '(555) 123-4567',
+        address: '123 Main Street',
+        city: 'Springfield',
+        state: 'IL',
+        zip: '62701',
+        website: 'www.smithroofing.com',
+        licenseNumber: 'IL-ROOF-12345',
+        yearsInBusiness: 8,
+        specialties: ['roofing', 'siding', 'gutters'],
+        documents: {
+          w9: [],
+          license: [],
+          insurance: [],
+          certificates: []
+        }
+      };
+      console.log('Sidebar - setting complete profile:', completeProfile);
+      setContractorProfile(completeProfile);
+      localStorage.setItem('contractorProfile', JSON.stringify(completeProfile));
+    }
+  }, []);
 
   const updatedNavItems = navigationItems.map(item => ({
     ...item,
@@ -37,6 +71,30 @@ export const Sidebar: React.FC = () => {
               Average Joe's Takeoffs
             </h1>
           </div>
+          
+          {/* Contractor Info Section */}
+          <div className="px-4 py-4 border-b border-gray-700">
+            <div className="text-white">
+              <div className="text-sm font-medium text-gray-300 mb-2">Contractor Info</div>
+              {contractorProfile ? (
+                <div className="space-y-1 text-xs">
+                  <div className="font-medium">{contractorProfile.businessName}</div>
+                  <div className="text-gray-400">{contractorProfile.contactName}</div>
+                  <div className="text-gray-400">{contractorProfile.address}</div>
+                  <div className="text-gray-400">{contractorProfile.city}, {contractorProfile.state} {contractorProfile.zip}</div>
+                  <div className="text-gray-400">{contractorProfile.phone}</div>
+                  <div className="text-gray-400">{contractorProfile.email}</div>
+                  {contractorProfile.website && (
+                    <div className="text-gray-400">{contractorProfile.website}</div>
+                  )}
+                  <div className="text-gray-400">License: {contractorProfile.licenseNumber}</div>
+                </div>
+              ) : (
+                <div className="text-xs text-gray-400">Loading contractor info...</div>
+              )}
+            </div>
+          </div>
+          
           <nav className="mt-5 flex-1 px-2 space-y-1">
             {updatedNavItems.map((item) => {
               const Icon = item.icon;

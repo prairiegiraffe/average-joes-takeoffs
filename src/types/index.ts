@@ -66,6 +66,7 @@ export interface ContractorProfile {
   city: string;
   state: string;
   zip: string;
+  website?: string;
   licenseNumber: string;
   yearsInBusiness: number;
   specialties: string[];
