@@ -543,9 +543,6 @@ const TakeoffDetailModal: React.FC<TakeoffDetailModalProps> = ({ takeoff, isOpen
   console.log('TakeoffDetailModal - isOpen:', isOpen, 'takeoff:', takeoff);
   if (!isOpen || !takeoff) return null;
 
-  // Add error boundary for debugging stone takeoffs
-  try {
-
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
@@ -723,27 +720,6 @@ const TakeoffDetailModal: React.FC<TakeoffDetailModalProps> = ({ takeoff, isOpen
       </div>
     </div>
   );
-  
-  } catch (error) {
-    console.error('Error in TakeoffDetailModal:', error, 'takeoff:', takeoff);
-    return (
-      <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full mx-4 p-6">
-          <h3 className="text-lg font-semibold text-red-600 mb-2">Error Loading Takeoff Details</h3>
-          <p className="text-gray-600 mb-4">There was an error loading this takeoff. Please try again.</p>
-          <p className="text-sm text-gray-500 mb-4">Takeoff Type: {takeoff?.type || 'Unknown'}</p>
-          <div className="flex justify-end space-x-3">
-            <button
-              onClick={onClose}
-              className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-colors"
-            >
-              Close
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
 };
 
 export const Customers: React.FC = () => {

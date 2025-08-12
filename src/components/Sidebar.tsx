@@ -70,6 +70,11 @@ export const Sidebar: React.FC = () => {
             </h1>
           </div>
           
+          {/* DEBUG: Visible indicator for deployment verification */}
+          <div className="px-4 py-2 bg-green-600 text-white text-xs">
+            Deploy: v1.5.1 - Contractor Info Added
+          </div>
+          
           {/* Contractor Info Section */}
           <div className="px-4 py-4 border-b border-gray-700">
             <div className="text-white">
@@ -124,8 +129,8 @@ export const Sidebar: React.FC = () => {
         <div className="flex-shrink-0 flex border-t border-gray-700 p-4">
           <div className="flex items-center w-full">
             <div className="text-xs text-gray-400">
-              <div className="font-medium">Version 1.5.0</div>
-              <div>Roofing & Siding Calculators</div>
+              <div className="font-medium">Version 1.5.1</div>
+              <div>With Contractor Info Display</div>
             </div>
           </div>
         </div>
