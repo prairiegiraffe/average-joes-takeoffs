@@ -29,32 +29,30 @@ export const Sidebar: React.FC = () => {
     const currentUser = getCurrentUser();
     console.log('Sidebar - currentUser:', currentUser);
     
-    if (currentUser) {
-      // Always create a fresh, complete profile
-      const completeProfile: ContractorProfile = {
-        businessName: currentUser.company || 'Smith Roofing LLC',
-        contactName: currentUser.name || 'John Smith',
-        email: currentUser.email || 'john@smithroofing.com',
-        phone: '(555) 123-4567',
-        address: '123 Main Street',
-        city: 'Springfield',
-        state: 'IL',
-        zip: '62701',
-        website: 'www.smithroofing.com',
-        licenseNumber: 'IL-ROOF-12345',
-        yearsInBusiness: 8,
-        specialties: ['roofing', 'siding', 'gutters'],
-        documents: {
-          w9: [],
-          license: [],
-          insurance: [],
-          certificates: []
-        }
-      };
-      console.log('Sidebar - setting complete profile:', completeProfile);
-      setContractorProfile(completeProfile);
-      localStorage.setItem('contractorProfile', JSON.stringify(completeProfile));
-    }
+    // Always show contractor profile, use currentUser data if available
+    const completeProfile: ContractorProfile = {
+      businessName: currentUser?.company || 'Smith Roofing LLC',
+      contactName: currentUser?.name || 'John Smith',
+      email: currentUser?.email || 'john@smithroofing.com',
+      phone: '(555) 123-4567',
+      address: '123 Main Street',
+      city: 'Springfield',
+      state: 'IL',
+      zip: '62701',
+      website: 'www.smithroofing.com',
+      licenseNumber: 'IL-ROOF-12345',
+      yearsInBusiness: 8,
+      specialties: ['roofing', 'siding', 'gutters'],
+      documents: {
+        w9: [],
+        license: [],
+        insurance: [],
+        certificates: []
+      }
+    };
+    console.log('Sidebar - setting complete profile:', completeProfile);
+    setContractorProfile(completeProfile);
+    localStorage.setItem('contractorProfile', JSON.stringify(completeProfile));
   }, []);
 
   const updatedNavItems = navigationItems.map(item => ({
