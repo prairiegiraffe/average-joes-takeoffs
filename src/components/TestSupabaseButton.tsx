@@ -5,6 +5,23 @@ export const TestSupabaseButton: React.FC = () => {
   const [status, setStatus] = useState<'idle' | 'testing' | 'success' | 'error'>('idle');
   const [message, setMessage] = useState('');
 
+  const checkConfig = () => {
+    const url = import.meta.env.VITE_SUPABASE_URL;
+    const key = import.meta.env.VITE_SUPABASE_ANON_KEY;
+    
+    console.log('🔧 Environment variables:');
+    console.log('VITE_SUPABASE_URL:', url);
+    console.log('VITE_SUPABASE_ANON_KEY:', key ? `${key.substring(0, 20)}...` : 'undefined');
+    
+    if (!url || url === 'your-project-url' || !key || key === 'your-anon-key') {
+      setStatus('error');
+      setMessage(`❌ Environment variables not set properly:\nURL: ${url}\nKey: ${key ? 'Set' : 'Missing'}`);
+    } else {
+      setStatus('success');
+      setMessage(`✅ Environment variables look good:\nURL: ${url}\nKey: ${key.substring(0, 20)}...`);
+    }
+  };
+
   const testSupabaseConnection = async () => {
     setStatus('testing');
     setMessage('Testing Supabase connection...');
@@ -77,7 +94,14 @@ export const TestSupabaseButton: React.FC = () => {
       </h3>
       
       <div className="space-y-3">
-        <div className="flex gap-3">
+        <div className="flex gap-3 flex-wrap">
+          <button
+            onClick={checkConfig}
+            className="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700"
+          >
+            Check Config
+          </button>
+
           <button
             onClick={testSupabaseConnection}
             disabled={status === 'testing'}
