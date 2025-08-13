@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { supabase, isSupabaseConfigured } from '../utils/supabase';
+import { getSupabase, isSupabaseReady } from '../utils/supabaseClient';
 import { authService } from '../utils/authService';
 import { loginUser } from '../utils/auth';
 
@@ -21,14 +22,17 @@ export const LoginSupabase: React.FC<LoginSupabaseProps> = ({ onLogin }) => {
     setError('');
     setIsLoading(true);
 
+    // Get Supabase client
+    const supabaseClient = getSupabase();
+    
     // Debug Supabase configuration
     console.log('Supabase URL:', import.meta.env.VITE_SUPABASE_URL);
     console.log('Supabase Key:', import.meta.env.VITE_SUPABASE_ANON_KEY ? 'Set' : 'Not set');
-    console.log('Is configured:', isSupabaseConfigured());
+    console.log('Supabase client ready:', isSupabaseReady());
     
     // Check if Supabase is configured
-    if (!isSupabaseConfigured()) {
-      console.error('Supabase not configured, falling back to mock auth');
+    if (!supabaseClient) {
+      console.error('Supabase client not available, falling back to mock auth');
       // Fall back to mock auth for testing
       const mockUser = loginUser(formData.email, formData.password);
       if (mockUser) {
@@ -45,7 +49,7 @@ export const LoginSupabase: React.FC<LoginSupabaseProps> = ({ onLogin }) => {
         // Sign up new user
         let data, error;
         try {
-          const result = await supabase.auth.signUp({
+          const result = await supabaseClient.auth.signUp({
             email: formData.email,
             password: formData.password,
           });
@@ -66,7 +70,7 @@ export const LoginSupabase: React.FC<LoginSupabaseProps> = ({ onLogin }) => {
         // Sign in existing user
         let data, error;
         try {
-          const result = await supabase.auth.signInWithPassword({
+          const result = await supabaseClient.auth.signInWithPassword({
             email: formData.email,
             password: formData.password,
           });
@@ -88,7 +92,7 @@ export const LoginSupabase: React.FC<LoginSupabaseProps> = ({ onLogin }) => {
 
         if (data.user) {
           // Get or create profile
-          const { data: profile } = await supabase
+          const { data: profile } = await supabaseClient
             .from('profiles')
             .select('*')
             .eq('id', data.user.id)
@@ -231,7 +235,7 @@ export const LoginSupabase: React.FC<LoginSupabaseProps> = ({ onLogin }) => {
 
         <div className="text-center text-xs text-gray-500">
           <p>Test Account: test@example.com / testpass123</p>
-          {!isSupabaseConfigured() && (
+          {!isSupabaseReady() && (
             <p className="mt-2 text-yellow-600 font-medium">
               ⚠️ Supabase not configured - Using demo mode
             </p>
