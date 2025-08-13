@@ -12,81 +12,111 @@ export class ContractorProfileService {
 
   // Get contractor profile for current user
   async getProfile(): Promise<LocalContractorProfile | null> {
+    console.log('🔍 ContractorProfileService.getProfile() called')
+    console.log('🔧 useSupabase:', this.useSupabase)
+    
     if (this.useSupabase) {
       try {
         const user = await authService.getCurrentUser()
-        if (!user) return this.getProfileFromLocalStorage()
+        console.log('👤 Current user:', user)
+        
+        if (!user) {
+          console.log('❌ No authenticated user, falling back to localStorage')
+          return this.getProfileFromLocalStorage()
+        }
 
+        console.log('🔍 Querying Supabase for user_id:', user.id)
         const { data, error } = await supabase
           .from('contractor_profiles')
           .select('*')
           .eq('user_id', user.id)
           .single()
 
+        console.log('📊 Supabase query result:', { data, error })
+
         if (error || !data) {
-          // No profile exists, return from localStorage or create default
+          console.log('❌ No profile in Supabase, falling back to localStorage')
           return this.getProfileFromLocalStorage()
         }
 
-        // Convert Supabase format to local format
+        console.log('✅ Found profile in Supabase, converting to local format')
         return this.convertSupabaseToLocal(data)
       } catch (error) {
-        console.error('Error fetching contractor profile:', error)
+        console.error('❌ Error fetching contractor profile:', error)
         return this.getProfileFromLocalStorage()
       }
     }
 
+    console.log('📱 Using localStorage (Supabase not configured)')
     return this.getProfileFromLocalStorage()
   }
 
   // Create or update contractor profile
   async saveProfile(profile: LocalContractorProfile): Promise<boolean> {
+    console.log('💾 ContractorProfileService.saveProfile() called with:', profile)
+    console.log('🔧 useSupabase:', this.useSupabase)
+    
     if (this.useSupabase) {
       try {
         const user = await authService.getCurrentUser()
+        console.log('👤 Current user for save:', user)
+        
         if (!user) {
-          // Fall back to localStorage
+          console.log('❌ No authenticated user, saving to localStorage only')
+          return this.saveProfileToLocalStorage(profile)
+        }
+
+        if (!user.tenantId) {
+          console.log('❌ User has no tenantId, saving to localStorage only')
           return this.saveProfileToLocalStorage(profile)
         }
 
         // Convert local format to Supabase format
         const supabaseProfile = this.convertLocalToSupabase(profile, user.id, user.tenantId)
+        console.log('🔄 Converted profile for Supabase:', supabaseProfile)
 
         // Check if profile exists
-        const { data: existingProfile } = await supabase
+        console.log('🔍 Checking if profile exists for user_id:', user.id)
+        const { data: existingProfile, error: checkError } = await supabase
           .from('contractor_profiles')
           .select('id')
           .eq('user_id', user.id)
           .single()
 
+        console.log('📊 Existing profile check:', { existingProfile, checkError })
+
         let result
         if (existingProfile) {
-          // Update existing profile
+          console.log('📝 Updating existing profile')
           result = await supabase
             .from('contractor_profiles')
             .update(supabaseProfile)
             .eq('user_id', user.id)
         } else {
-          // Create new profile
+          console.log('➕ Creating new profile')
           result = await supabase
             .from('contractor_profiles')
             .insert([supabaseProfile])
         }
 
+        console.log('📊 Save result:', result)
+
         if (result.error) {
-          console.error('Error saving contractor profile:', result.error)
+          console.error('❌ Error saving contractor profile to Supabase:', result.error)
           return this.saveProfileToLocalStorage(profile)
         }
 
+        console.log('✅ Successfully saved to Supabase')
         // Also save to localStorage as backup
         this.saveProfileToLocalStorage(profile)
         return true
       } catch (error) {
-        console.error('Error saving contractor profile:', error)
+        console.error('❌ Exception saving contractor profile:', error)
         return this.saveProfileToLocalStorage(profile)
       }
     }
 
+    console.log('📱 Saving to localStorage only (Supabase not configured)')
     return this.saveProfileToLocalStorage(profile)
   }
 

@@ -5,6 +5,7 @@ import Login from './components/Login';
 import AdminDashboard from './components/AdminDashboard';
 import RoofingCalculator from './components/RoofingCalculator';
 import { Profile } from './pages/Profile';
+import { Register } from './pages/Register';
 import { Customers } from './pages/Customers';
 import { Distributors } from './pages/Distributors';
 import { Subcontractors } from './pages/Subcontractors';
