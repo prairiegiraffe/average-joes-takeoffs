@@ -12,24 +12,46 @@ export interface AuthResponse {
 
 export async function signInDirectly(email: string, password: string): Promise<AuthResponse> {
   try {
+    // Debug log environment variables
+    console.log('Direct auth - SUPABASE_URL:', SUPABASE_URL);
+    console.log('Direct auth - SUPABASE_KEY length:', SUPABASE_KEY?.length || 0);
+    console.log('Direct auth - Email:', email);
+    
     // Validate inputs
     if (!SUPABASE_URL || !SUPABASE_KEY) {
       throw new Error('Supabase not configured');
     }
 
+    // Validate URL format
+    if (!SUPABASE_URL.startsWith('https://')) {
+      throw new Error('Invalid Supabase URL format');
+    }
+
+    // Validate key format (basic JWT structure)
+    if (!SUPABASE_KEY.includes('.') || SUPABASE_KEY.length < 100) {
+      throw new Error('Invalid Supabase key format');
+    }
+
+    const url = `${SUPABASE_URL}/auth/v1/token?grant_type=password`;
+    const headers = {
+      'Content-Type': 'application/json',
+      'apikey': SUPABASE_KEY,
+      'Authorization': `Bearer ${SUPABASE_KEY}`
+    };
+    const body = JSON.stringify({
+      email,
+      password,
+      gotrue_meta_security: {}
+    });
+
+    console.log('Direct auth - About to fetch:', url);
+    console.log('Direct auth - Headers:', headers);
+
     // Make direct API call to Supabase Auth
-    const response = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=password`, {
+    const response = await fetch(url, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'apikey': SUPABASE_KEY,
-        'Authorization': `Bearer ${SUPABASE_KEY}`
-      },
-      body: JSON.stringify({
-        email,
-        password,
-        gotrue_meta_security: {}
-      })
+      headers,
+      body
     });
 
     if (!response.ok) {
@@ -62,8 +84,83 @@ export async function signInDirectly(email: string, password: string): Promise<A
     };
   } catch (error: any) {
     console.error('Direct auth error:', error);
+    
+    // If fetch fails, try XMLHttpRequest as fallback
+    if (error.message?.includes('fetch')) {
+      console.log('Fetch failed, trying XMLHttpRequest...');
+      return signInWithXHR(email, password);
+    }
+    
     return { error: error.message || 'Network error' };
   }
+}
+
+// Fallback using XMLHttpRequest
+function signInWithXHR(email: string, password: string): Promise<AuthResponse> {
+  return new Promise((resolve) => {
+    try {
+      const xhr = new XMLHttpRequest();
+      const url = `${SUPABASE_URL}/auth/v1/token?grant_type=password`;
+      
+      xhr.open('POST', url, true);
+      xhr.setRequestHeader('Content-Type', 'application/json');
+      xhr.setRequestHeader('apikey', SUPABASE_KEY);
+      xhr.setRequestHeader('Authorization', `Bearer ${SUPABASE_KEY}`);
+      
+      xhr.onload = function() {
+        if (xhr.status >= 200 && xhr.status < 300) {
+          try {
+            const data = JSON.parse(xhr.responseText);
+            
+            // Store the session
+            if (data.access_token) {
+              localStorage.setItem('supabase.auth.token', JSON.stringify({
+                currentSession: {
+                  access_token: data.access_token,
+                  refresh_token: data.refresh_token,
+                  expires_at: data.expires_at,
+                  user: data.user
+                },
+                expiresAt: data.expires_at
+              }));
+            }
+            
+            resolve({
+              user: data.user,
+              session: {
+                access_token: data.access_token,
+                refresh_token: data.refresh_token,
+                user: data.user
+              }
+            });
+          } catch (parseError) {
+            resolve({ error: 'Failed to parse response' });
+          }
+        } else {
+          try {
+            const error = JSON.parse(xhr.responseText);
+            resolve({ error: error.error_description || error.msg || 'Authentication failed' });
+          } catch {
+            resolve({ error: `HTTP ${xhr.status}: ${xhr.statusText}` });
+          }
+        }
+      };
+      
+      xhr.onerror = function() {
+        resolve({ error: 'Network error with XMLHttpRequest' });
+      };
+      
+      const body = JSON.stringify({
+        email,
+        password,
+        gotrue_meta_security: {}
+      });
+      
+      xhr.send(body);
+    } catch (error: any) {
+      resolve({ error: error.message || 'XMLHttpRequest setup failed' });
+    }
+  });
 }
 
 export async function getProfileDirectly(userId: string): Promise<any> {
