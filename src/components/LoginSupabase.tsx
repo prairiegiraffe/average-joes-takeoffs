@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { supabase } from '../utils/supabase';
+import { supabase, isSupabaseConfigured } from '../utils/supabase';
 import { authService } from '../utils/authService';
+import { loginUser } from '../utils/auth';
 
 interface LoginSupabaseProps {
   onLogin: (user: any) => void;
@@ -19,6 +20,20 @@ export const LoginSupabase: React.FC<LoginSupabaseProps> = ({ onLogin }) => {
     e.preventDefault();
     setError('');
     setIsLoading(true);
+
+    // Check if Supabase is configured
+    if (!isSupabaseConfigured()) {
+      console.error('Supabase not configured, falling back to mock auth');
+      // Fall back to mock auth for testing
+      const mockUser = loginUser(formData.email, formData.password);
+      if (mockUser) {
+        onLogin(mockUser);
+      } else {
+        setError('Invalid credentials. Use test@example.com / testpass123');
+      }
+      setIsLoading(false);
+      return;
+    }
 
     try {
       if (mode === 'signup') {
@@ -188,6 +203,11 @@ export const LoginSupabase: React.FC<LoginSupabaseProps> = ({ onLogin }) => {
 
         <div className="text-center text-xs text-gray-500">
           <p>Test Account: test@example.com / testpass123</p>
+          {!isSupabaseConfigured() && (
+            <p className="mt-2 text-yellow-600 font-medium">
+              ⚠️ Supabase not configured - Using demo mode
+            </p>
+          )}
         </div>
       </div>
     </div>

@@ -9,6 +9,18 @@ export const USER_ROLES = {
 
 // Mock users database (in real SaaS, this would be your backend)
 export const MOCK_USERS = {
+  // Test account that matches Supabase
+  'test@example.com': {
+    id: 'test-user-1',
+    email: 'test@example.com',
+    password: 'testpass123',
+    name: 'Test User',
+    role: USER_ROLES.CONTRACTOR,
+    company: 'Test Roofing Company',
+    tenantId: 'tenant-test',
+    createdAt: '2025-01-01'
+  },
+  
   // Super Admin account for SaaS company
   'admin@averagejoes.com': {
     id: 'admin-1',
