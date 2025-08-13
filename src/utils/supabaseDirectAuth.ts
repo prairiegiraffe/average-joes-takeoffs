@@ -1,8 +1,8 @@
 // Direct Supabase Auth API calls without SDK
 // This bypasses the SDK fetch issues
 
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || '';
-const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL?.trim() || '';
+const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY?.trim().replace(/\s+/g, '') || '';
 
 export interface AuthResponse {
   user?: any;
@@ -32,11 +32,12 @@ export async function signInDirectly(email: string, password: string): Promise<A
       throw new Error('Invalid Supabase key format');
     }
 
+    const cleanKey = SUPABASE_KEY.trim().replace(/\s+/g, '');
     const url = `${SUPABASE_URL}/auth/v1/token?grant_type=password`;
     const headers = {
       'Content-Type': 'application/json',
-      'apikey': SUPABASE_KEY,
-      'Authorization': `Bearer ${SUPABASE_KEY}`
+      'apikey': cleanKey,
+      'Authorization': `Bearer ${cleanKey}`
     };
     const body = JSON.stringify({
       email,
@@ -104,8 +105,8 @@ function signInWithXHR(email: string, password: string): Promise<AuthResponse> {
       
       xhr.open('POST', url, true);
       xhr.setRequestHeader('Content-Type', 'application/json');
-      xhr.setRequestHeader('apikey', SUPABASE_KEY);
-      xhr.setRequestHeader('Authorization', `Bearer ${SUPABASE_KEY}`);
+      xhr.setRequestHeader('apikey', SUPABASE_KEY.trim().replace(/\s+/g, ''));
+      xhr.setRequestHeader('Authorization', `Bearer ${SUPABASE_KEY.trim().replace(/\s+/g, '')}`);
       
       xhr.onload = function() {
         if (xhr.status >= 200 && xhr.status < 300) {
