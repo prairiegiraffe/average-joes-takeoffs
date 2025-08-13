@@ -2,7 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Link, useLocation } from 'react-router-dom';
 import { getCurrentUser, logoutUser, isSuperAdmin, isContractor } from './utils/auth';
 import Login from './components/Login';
+import { LoginSupabase } from './components/LoginSupabase';
 import AdminDashboard from './components/AdminDashboard';
+import { supabase } from './utils/supabase';
 import RoofingCalculator from './components/RoofingCalculator';
 import { Profile } from './pages/Profile';
 import { Register } from './pages/Register';
@@ -713,11 +715,76 @@ function App() {
 
   // Check for existing user on app load
   useEffect(() => {
-    const existingUser = getCurrentUser();
-    if (existingUser) {
-      setUser(existingUser);
-    }
-    setIsLoading(false);
+    const checkAuth = async () => {
+      try {
+        // First check Supabase session
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (session?.user) {
+          // Get profile data
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', session.user.id)
+            .single();
+
+          const userData = {
+            id: session.user.id,
+            email: session.user.email!,
+            name: profile?.name || session.user.email!.split('@')[0],
+            role: profile?.role || 'contractor',
+            company: profile?.company || 'My Company',
+            tenantId: profile?.tenant_id || null
+          };
+
+          setUser(userData);
+          localStorage.setItem('averagejoes_user', JSON.stringify(userData));
+        } else {
+          // Fall back to localStorage if no Supabase session
+          const existingUser = getCurrentUser();
+          if (existingUser && !existingUser.id.startsWith('contractor-')) {
+            setUser(existingUser);
+          }
+        }
+      } catch (error) {
+        console.error('Auth check error:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    checkAuth();
+
+    // Listen for auth state changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log('Auth state changed:', event);
+      
+      if (event === 'SIGNED_IN' && session?.user) {
+        // Get profile data
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', session.user.id)
+          .single();
+
+        const userData = {
+          id: session.user.id,
+          email: session.user.email!,
+          name: profile?.name || session.user.email!.split('@')[0],
+          role: profile?.role || 'contractor',
+          company: profile?.company || 'My Company',
+          tenantId: profile?.tenant_id || null
+        };
+
+        setUser(userData);
+        localStorage.setItem('averagejoes_user', JSON.stringify(userData));
+      } else if (event === 'SIGNED_OUT') {
+        setUser(null);
+        localStorage.removeItem('averagejoes_user');
+      }
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
   // Force router refresh if it gets stuck
@@ -734,7 +801,8 @@ function App() {
     setUser(loggedInUser);
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
     logoutUser();
     setUser(null);
   };
@@ -751,8 +819,8 @@ function App() {
         </div>
       )}
 
-      {/* Not logged in - show login */}
-      {!isLoading && !user && <Login onLogin={handleLogin} />}
+      {/* Not logged in - show Supabase login */}
+      {!isLoading && !user && <LoginSupabase onLogin={handleLogin} />}
 
       {/* Super Admin gets admin dashboard */}
       {!isLoading && user && isSuperAdmin(user) && (
