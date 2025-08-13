@@ -25,11 +25,30 @@ export class ContractorProfileService {
           return this.getProfileFromLocalStorage()
         }
 
-        console.log('🔍 Querying Supabase for user_id:', user.id)
+        // Handle localStorage users - try to find their Supabase equivalent
+        let queryUserId = user.id;
+        if (user.id.startsWith('contractor-') || user.id.startsWith('admin-')) {
+          console.log('🔄 Looking for Supabase user by email:', user.email)
+          const { data: existingUser } = await supabase
+            .from('profiles')
+            .select('id')
+            .eq('email', user.email)
+            .single();
+          
+          if (existingUser) {
+            queryUserId = existingUser.id;
+            console.log('✅ Found Supabase user ID:', queryUserId);
+          } else {
+            console.log('❌ No Supabase user found for email, using localStorage');
+            return this.getProfileFromLocalStorage();
+          }
+        }
+
+        console.log('🔍 Querying Supabase for user_id:', queryUserId)
         const { data, error } = await supabase
           .from('contractor_profiles')
           .select('*')
-          .eq('user_id', user.id)
+          .eq('user_id', queryUserId)
           .single()
 
         console.log('📊 Supabase query result:', { data, error })
@@ -66,21 +85,81 @@ export class ContractorProfileService {
           return this.saveProfileToLocalStorage(profile)
         }
 
-        if (!user.tenantId) {
-          console.log('❌ User has no tenantId, saving to localStorage only')
-          return this.saveProfileToLocalStorage(profile)
+        // For localStorage users (mock users), create a real user in Supabase first
+        let actualUserId = user.id;
+        let actualTenantId = user.tenantId;
+
+        // Check if this is a mock user from localStorage
+        if (user.id.startsWith('contractor-') || user.id.startsWith('admin-')) {
+          console.log('🔄 Converting localStorage user to Supabase user...')
+          
+          try {
+            // Try to register this user in Supabase
+            const { data: authUser, error: authError } = await supabase.auth.signUp({
+              email: user.email,
+              password: 'temppass123', // Temporary password
+              options: {
+                data: {
+                  name: user.name,
+                  company: user.company
+                }
+              }
+            });
+
+            if (authError) {
+              console.log('⚠️ User might already exist, trying to sign in...')
+              
+              // If user exists, get their Supabase ID
+              const { data: existingUser } = await supabase
+                .from('profiles')
+                .select('id, tenant_id')
+                .eq('email', user.email)
+                .single();
+
+              if (existingUser) {
+                actualUserId = existingUser.id;
+                actualTenantId = existingUser.tenant_id;
+                console.log('✅ Found existing Supabase user:', actualUserId);
+              } else {
+                console.log('❌ Could not create or find Supabase user, using localStorage only');
+                return this.saveProfileToLocalStorage(profile);
+              }
+            } else if (authUser.user) {
+              actualUserId = authUser.user.id;
+              console.log('✅ Created new Supabase user:', actualUserId);
+            }
+          } catch (error) {
+            console.log('❌ Failed to create Supabase user:', error);
+            return this.saveProfileToLocalStorage(profile);
+          }
+        }
+
+        if (!actualTenantId) {
+          // Get default tenant
+          const { data: defaultTenant } = await supabase
+            .from('tenants')
+            .select('id')
+            .eq('name', 'Default Tenant')
+            .single();
+          
+          actualTenantId = defaultTenant?.id;
+          
+          if (!actualTenantId) {
+            console.log('❌ No default tenant found, saving to localStorage only')
+            return this.saveProfileToLocalStorage(profile)
+          }
         }
 
         // Convert local format to Supabase format
-        const supabaseProfile = this.convertLocalToSupabase(profile, user.id, user.tenantId)
+        const supabaseProfile = this.convertLocalToSupabase(profile, actualUserId, actualTenantId)
         console.log('🔄 Converted profile for Supabase:', supabaseProfile)
 
         // Check if profile exists
-        console.log('🔍 Checking if profile exists for user_id:', user.id)
+        console.log('🔍 Checking if profile exists for user_id:', actualUserId)
         const { data: existingProfile, error: checkError } = await supabase
           .from('contractor_profiles')
           .select('id')
-          .eq('user_id', user.id)
+          .eq('user_id', actualUserId)
           .single()
 
         console.log('📊 Existing profile check:', { existingProfile, checkError })
@@ -91,7 +170,7 @@ export class ContractorProfileService {
           result = await supabase
             .from('contractor_profiles')
             .update(supabaseProfile)
-            .eq('user_id', user.id)
+            .eq('user_id', actualUserId)
         } else {
           console.log('➕ Creating new profile')
           result = await supabase
