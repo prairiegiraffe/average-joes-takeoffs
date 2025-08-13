@@ -2,6 +2,9 @@ import { supabase, isSupabaseConfigured, type ContractorProfile } from './supaba
 import { authService } from './authService'
 import type { ContractorProfile as LocalContractorProfile } from '../types'
 
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL?.trim() || '';
+const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY?.trim().replace(/\s+/g, '') || '';
+
 // Service for managing contractor profiles with Supabase integration
 export class ContractorProfileService {
   private useSupabase: boolean
@@ -33,13 +36,41 @@ export class ContractorProfileService {
         }
 
         console.log('🔍 Querying Supabase for user_id:', queryUserId)
-        const { data, error } = await supabase
+        
+        // Try querying without .single() first to see if records exist
+        const { data: allData, error: listError } = await supabase
           .from('contractor_profiles')
           .select('*')
           .eq('user_id', queryUserId)
-          .single()
-
-        console.log('📊 Supabase query result:', { data, error })
+        
+        console.log('📊 Supabase list query result:', { allData, listError, count: allData?.length })
+        
+        if (listError) {
+          console.error('❌ Supabase list query error:', listError)
+          console.log('🔄 Trying direct REST API as fallback...')
+          
+          // Try direct REST API call
+          try {
+            const profile = await this.getProfileDirectly(queryUserId)
+            if (profile) {
+              console.log('✅ Got profile via direct API:', profile)
+              return this.convertSupabaseToLocal(profile)
+            }
+          } catch (directError) {
+            console.error('❌ Direct API also failed:', directError)
+          }
+          
+          return this.getProfileFromLocalStorage()
+        }
+        
+        if (!allData || allData.length === 0) {
+          console.log('❌ No profile records found in Supabase, falling back to localStorage')
+          return this.getProfileFromLocalStorage()
+        }
+        
+        // Use the first record if multiple exist
+        const data = allData[0]
+        const error = null
 
         if (error || !data) {
           console.log('❌ No profile in Supabase, falling back to localStorage')
@@ -209,6 +240,41 @@ export class ContractorProfileService {
     
     console.log('✅ Converted profile:', converted);
     return converted;
+  }
+
+  // Direct REST API call to get profile (bypassing SDK)
+  private async getProfileDirectly(userId: string): Promise<ContractorProfile | null> {
+    try {
+      const tokenData = localStorage.getItem('supabase.auth.token');
+      if (!tokenData) {
+        console.log('No auth token available for direct API call');
+        return null;
+      }
+
+      const { currentSession } = JSON.parse(tokenData);
+      const cleanKey = SUPABASE_KEY.trim().replace(/\s+/g, '');
+      
+      const response = await fetch(`${SUPABASE_URL}/rest/v1/contractor_profiles?user_id=eq.${userId}&select=*`, {
+        headers: {
+          'apikey': cleanKey,
+          'Authorization': `Bearer ${currentSession.access_token}`,
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Prefer': 'return=representation'
+        }
+      });
+
+      if (!response.ok) {
+        console.error('Direct API response not ok:', response.status, response.statusText);
+        return null;
+      }
+
+      const profiles = await response.json();
+      return profiles[0] || null;
+    } catch (error) {
+      console.error('Direct profile fetch error:', error);
+      return null;
+    }
   }
 
   // Convert local format to Supabase format
