@@ -1,8 +1,11 @@
 import { createClient } from '@supabase/supabase-js'
 
 // Environment variables - you'll get these from your Supabase project
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'your-project-url'
-const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'your-anon-key'
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://placeholder.supabase.co'
+const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBsYWNlaG9sZGVyIiwicm9sZSI6ImFub24iLCJpYXQiOjE2MDAwMDAwMDAsImV4cCI6MjAwMDAwMDAwMH0.placeholder'
+
+// Debug log
+console.log('Initializing Supabase with:', { url: supabaseUrl, hasKey: !!supabaseKey });
 
 // Create Supabase client
 export const supabase = createClient(supabaseUrl, supabaseKey)
@@ -75,5 +78,7 @@ export interface ContractorProfile {
 
 // Helper function to check if Supabase is configured
 export const isSupabaseConfigured = () => {
-  return supabaseUrl !== 'your-project-url' && supabaseKey !== 'your-anon-key'
+  const configured = !supabaseUrl.includes('placeholder') && !supabaseKey.includes('placeholder')
+  console.log('isSupabaseConfigured:', configured, { url: supabaseUrl.substring(0, 30) })
+  return configured
 }

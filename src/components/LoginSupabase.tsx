@@ -21,6 +21,11 @@ export const LoginSupabase: React.FC<LoginSupabaseProps> = ({ onLogin }) => {
     setError('');
     setIsLoading(true);
 
+    // Debug Supabase configuration
+    console.log('Supabase URL:', import.meta.env.VITE_SUPABASE_URL);
+    console.log('Supabase Key:', import.meta.env.VITE_SUPABASE_ANON_KEY ? 'Set' : 'Not set');
+    console.log('Is configured:', isSupabaseConfigured());
+    
     // Check if Supabase is configured
     if (!isSupabaseConfigured()) {
       console.error('Supabase not configured, falling back to mock auth');
@@ -38,10 +43,18 @@ export const LoginSupabase: React.FC<LoginSupabaseProps> = ({ onLogin }) => {
     try {
       if (mode === 'signup') {
         // Sign up new user
-        const { data, error } = await supabase.auth.signUp({
-          email: formData.email,
-          password: formData.password,
-        });
+        let data, error;
+        try {
+          const result = await supabase.auth.signUp({
+            email: formData.email,
+            password: formData.password,
+          });
+          data = result.data;
+          error = result.error;
+        } catch (fetchError: any) {
+          console.error('Fetch error during signup:', fetchError);
+          throw new Error('Network error - please check your connection');
+        }
 
         if (error) throw error;
 
@@ -51,10 +64,25 @@ export const LoginSupabase: React.FC<LoginSupabaseProps> = ({ onLogin }) => {
         }
       } else {
         // Sign in existing user
-        const { data, error } = await supabase.auth.signInWithPassword({
-          email: formData.email,
-          password: formData.password,
-        });
+        let data, error;
+        try {
+          const result = await supabase.auth.signInWithPassword({
+            email: formData.email,
+            password: formData.password,
+          });
+          data = result.data;
+          error = result.error;
+        } catch (fetchError: any) {
+          console.error('Fetch error during signin:', fetchError);
+          // Fall back to mock auth on fetch error
+          const mockUser = loginUser(formData.email, formData.password);
+          if (mockUser) {
+            onLogin(mockUser);
+            return;
+          } else {
+            throw new Error('Network error and invalid mock credentials');
+          }
+        }
 
         if (error) throw error;
 
