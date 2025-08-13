@@ -35,6 +35,9 @@ export const Sidebar: React.FC = () => {
         }
         
         console.log('Sidebar - loaded profile:', profileData);
+        console.log('Sidebar - contactName:', profileData?.contactName);
+        console.log('Sidebar - phone:', profileData?.phone);
+        console.log('Sidebar - licenseNumber:', profileData?.licenseNumber);
         setContractorProfile(profileData);
       } catch (error) {
         console.error('Error loading contractor profile:', error);

@@ -184,7 +184,9 @@ export class ContractorProfileService {
 
   // Convert Supabase format to local format
   private convertSupabaseToLocal(supabaseProfile: ContractorProfile): LocalContractorProfile {
-    return {
+    console.log('🔄 Converting Supabase profile to local format:', supabaseProfile);
+    
+    const converted = {
       businessName: supabaseProfile.business_name,
       contactName: supabaseProfile.contact_name,
       email: supabaseProfile.email,
@@ -203,7 +205,10 @@ export class ContractorProfileService {
         insurance: [],
         certificates: []
       }
-    }
+    };
+    
+    console.log('✅ Converted profile:', converted);
+    return converted;
   }
 
   // Convert local format to Supabase format
