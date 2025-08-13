@@ -195,9 +195,9 @@ export class ContractorProfileService {
   // Get default profile structure
   getDefaultProfile(): LocalContractorProfile {
     return {
-      businessName: 'Average Joe Construction',
-      contactName: 'Joe Smith',
-      email: 'joe@averagejoeconstruction.com',
+      businessName: "Average Joe's Takeoffs",
+      contactName: 'John Smith',
+      email: 'john@averagejoestakeoffs.com',
       phone: '(555) 123-4567',
       address: '123 Main Street',
       city: 'Anytown',
