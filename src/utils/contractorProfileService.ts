@@ -25,23 +25,11 @@ export class ContractorProfileService {
           return this.getProfileFromLocalStorage()
         }
 
-        // Handle localStorage users - try to find their Supabase equivalent
+        // Handle localStorage users
         let queryUserId = user.id;
         if (user.id.startsWith('contractor-') || user.id.startsWith('admin-')) {
-          console.log('🔄 Looking for Supabase user by email:', user.email)
-          const { data: existingUser } = await supabase
-            .from('profiles')
-            .select('id')
-            .eq('email', user.email)
-            .single();
-          
-          if (existingUser) {
-            queryUserId = existingUser.id;
-            console.log('✅ Found Supabase user ID:', queryUserId);
-          } else {
-            console.log('❌ No Supabase user found for email, using localStorage');
-            return this.getProfileFromLocalStorage();
-          }
+          console.log('⚠️ Using localStorage mock user - returning localStorage data');
+          return this.getProfileFromLocalStorage();
         }
 
         console.log('🔍 Querying Supabase for user_id:', queryUserId)
@@ -91,47 +79,11 @@ export class ContractorProfileService {
 
         // Check if this is a mock user from localStorage
         if (user.id.startsWith('contractor-') || user.id.startsWith('admin-')) {
-          console.log('🔄 Converting localStorage user to Supabase user...')
-          
-          try {
-            // Try to register this user in Supabase
-            const { data: authUser, error: authError } = await supabase.auth.signUp({
-              email: user.email,
-              password: 'temppass123', // Temporary password
-              options: {
-                data: {
-                  name: user.name,
-                  company: user.company
-                }
-              }
-            });
-
-            if (authError) {
-              console.log('⚠️ User might already exist, trying to sign in...')
-              
-              // If user exists, get their Supabase ID
-              const { data: existingUser } = await supabase
-                .from('profiles')
-                .select('id, tenant_id')
-                .eq('email', user.email)
-                .single();
-
-              if (existingUser) {
-                actualUserId = existingUser.id;
-                actualTenantId = existingUser.tenant_id;
-                console.log('✅ Found existing Supabase user:', actualUserId);
-              } else {
-                console.log('❌ Could not create or find Supabase user, using localStorage only');
-                return this.saveProfileToLocalStorage(profile);
-              }
-            } else if (authUser.user) {
-              actualUserId = authUser.user.id;
-              console.log('✅ Created new Supabase user:', actualUserId);
-            }
-          } catch (error) {
-            console.log('❌ Failed to create Supabase user:', error);
-            return this.saveProfileToLocalStorage(profile);
-          }
+          console.log('⚠️ Using localStorage mock user - Supabase requires real authentication');
+          console.log('💡 To use Supabase:');
+          console.log('   1. Create a user in Supabase Dashboard > Authentication');
+          console.log('   2. Or run the simple-test-profile.sql script');
+          return this.saveProfileToLocalStorage(profile);
         }
 
         if (!actualTenantId) {
