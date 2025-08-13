@@ -53,6 +53,26 @@ export interface Customer {
   updated_at: string
 }
 
+export interface ContractorProfile {
+  id: string
+  user_id: string
+  tenant_id: string
+  business_name: string
+  contact_name: string
+  email: string
+  phone: string
+  address: string
+  city: string
+  state: string
+  zip: string
+  website?: string
+  license_number: string
+  years_in_business: number
+  specialties: string[]
+  created_at: string
+  updated_at: string
+}
+
 // Helper function to check if Supabase is configured
 export const isSupabaseConfigured = () => {
   return supabaseUrl !== 'your-project-url' && supabaseKey !== 'your-anon-key'

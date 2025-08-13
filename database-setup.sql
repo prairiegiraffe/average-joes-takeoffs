@@ -53,13 +53,35 @@ CREATE TABLE public.customers (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
--- 5. Enable Row Level Security
+-- 5. Create contractor_profiles table
+CREATE TABLE public.contractor_profiles (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE UNIQUE NOT NULL,
+  tenant_id UUID REFERENCES public.tenants(id) ON DELETE CASCADE NOT NULL,
+  business_name TEXT NOT NULL,
+  contact_name TEXT NOT NULL,
+  email TEXT NOT NULL,
+  phone TEXT NOT NULL,
+  address TEXT NOT NULL,
+  city TEXT NOT NULL,
+  state TEXT NOT NULL,
+  zip TEXT NOT NULL,
+  website TEXT,
+  license_number TEXT NOT NULL,
+  years_in_business INTEGER DEFAULT 0,
+  specialties TEXT[] DEFAULT '{}',
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+-- 6. Enable Row Level Security
 ALTER TABLE public.tenants ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.projects ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.customers ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.contractor_profiles ENABLE ROW LEVEL SECURITY;
 
--- 6. Create RLS Policies
+-- 7. Create RLS Policies
 
 -- Tenants: Users can only see their own tenant
 CREATE POLICY "Users can view their own tenant" ON public.tenants
@@ -134,7 +156,20 @@ CREATE POLICY "Users can delete customers in their tenant" ON public.customers
     )
   );
 
--- 7. Create function to handle new user signup
+-- Contractor Profiles: Users can only see/modify their own profile
+CREATE POLICY "Users can view own contractor profile" ON public.contractor_profiles
+  FOR SELECT USING (user_id = auth.uid());
+
+CREATE POLICY "Users can create own contractor profile" ON public.contractor_profiles
+  FOR INSERT WITH CHECK (user_id = auth.uid());
+
+CREATE POLICY "Users can update own contractor profile" ON public.contractor_profiles
+  FOR UPDATE USING (user_id = auth.uid());
+
+CREATE POLICY "Users can delete own contractor profile" ON public.contractor_profiles
+  FOR DELETE USING (user_id = auth.uid());
+
+-- 8. Create function to handle new user signup
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -150,16 +185,16 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- 8. Create trigger for new user signup
+-- 9. Create trigger for new user signup
 CREATE OR REPLACE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
   FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
 
--- 9. Create default tenant
+-- 10. Create default tenant
 INSERT INTO public.tenants (name, plan) VALUES ('Default Tenant', 'free')
 ON CONFLICT DO NOTHING;
 
--- 10. Create updated_at trigger function
+-- 11. Create updated_at trigger function
 CREATE OR REPLACE FUNCTION public.handle_updated_at()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -168,7 +203,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- 11. Add updated_at triggers
+-- 12. Add updated_at triggers
 CREATE TRIGGER handle_updated_at BEFORE UPDATE ON public.tenants
   FOR EACH ROW EXECUTE FUNCTION public.handle_updated_at();
 
@@ -179,4 +214,7 @@ CREATE TRIGGER handle_updated_at BEFORE UPDATE ON public.projects
   FOR EACH ROW EXECUTE FUNCTION public.handle_updated_at();
 
 CREATE TRIGGER handle_updated_at BEFORE UPDATE ON public.customers
+  FOR EACH ROW EXECUTE FUNCTION public.handle_updated_at();
+
+CREATE TRIGGER handle_updated_at BEFORE UPDATE ON public.contractor_profiles
   FOR EACH ROW EXECUTE FUNCTION public.handle_updated_at();

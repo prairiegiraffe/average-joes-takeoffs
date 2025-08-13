@@ -10,7 +10,7 @@ import {
   Building
 } from 'lucide-react';
 import type { NavigationItem, ContractorProfile } from '../types';
-import { getCurrentUser } from '../utils/auth';
+import { contractorProfileService } from '../utils/contractorProfileService';
 
 const navigationItems: NavigationItem[] = [
   { id: 'home', name: 'Home', href: '/', icon: Home, current: false },
@@ -26,34 +26,47 @@ export const Sidebar: React.FC = () => {
   const [contractorProfile, setContractorProfile] = useState<ContractorProfile | null>(null);
 
   useEffect(() => {
-    const currentUser = getCurrentUser();
-    console.log('Sidebar - currentUser:', currentUser);
-    
-    // Always show contractor profile, use currentUser data if available
-    const completeProfile: ContractorProfile = {
-      businessName: currentUser?.company || 'Smith Roofing LLC',
-      contactName: currentUser?.name || 'John Smith',
-      email: currentUser?.email || 'john@smithroofing.com',
-      phone: '(555) 123-4567',
-      address: '123 Main Street',
-      city: 'Springfield',
-      state: 'IL',
-      zip: '62701',
-      website: 'www.smithroofing.com',
-      licenseNumber: 'IL-ROOF-12345',
-      yearsInBusiness: 8,
-      specialties: ['roofing', 'siding', 'gutters'],
-      documents: {
-        w9: [],
-        license: [],
-        insurance: [],
-        certificates: []
+    const loadProfile = async () => {
+      try {
+        let profileData = await contractorProfileService.getProfile();
+        
+        if (!profileData) {
+          profileData = contractorProfileService.getDefaultProfile();
+        }
+        
+        console.log('Sidebar - loaded profile:', profileData);
+        setContractorProfile(profileData);
+      } catch (error) {
+        console.error('Error loading contractor profile:', error);
+        setContractorProfile(contractorProfileService.getDefaultProfile());
       }
     };
-    console.log('Sidebar - setting complete profile:', completeProfile);
-    setContractorProfile(completeProfile);
-    localStorage.setItem('contractorProfile', JSON.stringify(completeProfile));
+
+    // Load initially
+    loadProfile();
+
+    // Listen for storage changes to update when profile is changed in other components
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'contractorProfile') {
+        loadProfile();
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    
+    // Also listen for custom events for same-tab updates
+    const handleProfileUpdate = () => {
+      loadProfile();
+    };
+    
+    window.addEventListener('profileUpdate', handleProfileUpdate);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('profileUpdate', handleProfileUpdate);
+    };
   }, []);
+
 
   const updatedNavItems = navigationItems.map(item => ({
     ...item,
@@ -81,15 +94,8 @@ export const Sidebar: React.FC = () => {
               <div className="text-sm font-medium text-gray-300 mb-2">Contractor Info</div>
               {contractorProfile ? (
                 <div className="space-y-1 text-xs">
-                  <div className="font-medium">{contractorProfile.businessName}</div>
-                  <div className="text-gray-400">{contractorProfile.contactName}</div>
-                  <div className="text-gray-400">{contractorProfile.address}</div>
-                  <div className="text-gray-400">{contractorProfile.city}, {contractorProfile.state} {contractorProfile.zip}</div>
+                  <div className="font-medium text-white">{contractorProfile.contactName}</div>
                   <div className="text-gray-400">{contractorProfile.phone}</div>
-                  <div className="text-gray-400">{contractorProfile.email}</div>
-                  {contractorProfile.website && (
-                    <div className="text-gray-400">{contractorProfile.website}</div>
-                  )}
                   <div className="text-gray-400">License: {contractorProfile.licenseNumber}</div>
                 </div>
               ) : (

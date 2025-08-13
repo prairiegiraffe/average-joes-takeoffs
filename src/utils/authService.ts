@@ -1,4 +1,4 @@
-import { supabase, isSupabaseConfigured, Profile } from './supabase'
+import { supabase, isSupabaseConfigured, type Profile } from './supabase'
 import { 
   loginUser as localLoginUser, 
   getCurrentUser as localGetCurrentUser,

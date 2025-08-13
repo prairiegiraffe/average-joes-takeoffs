@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Camera, Upload, Download, Trash2, FileText, AlertTriangle, CheckCircle, Sun, Moon } from 'lucide-react';
 import type { DocumentFile, DocumentTabType, ContractorProfile } from '../types';
 import { useTheme } from '../contexts/ThemeContext';
+import { contractorProfileService } from '../utils/contractorProfileService';
 
 const DOCUMENT_TABS = [
   {
@@ -234,28 +235,45 @@ const DocumentUpload: React.FC<DocumentUploadProps> = ({
 export const Profile: React.FC = () => {
   const { theme, toggleTheme, setTheme } = useTheme();
   const [activeTab, setActiveTab] = useState<DocumentTabType>('w9');
-  const [profile, setProfile] = useState<ContractorProfile>({
-    businessName: 'Average Joe Construction',
-    contactName: 'Joe Smith',
-    email: 'joe@averagejoeconstruction.com',
-    phone: '(555) 123-4567',
-    address: '123 Main Street',
-    city: 'Anytown',
-    state: 'CA',
-    zip: '12345',
-    licenseNumber: 'CLB123456',
-    yearsInBusiness: 15,
-    specialties: ['Roofing', 'Siding', 'Windows'],
-    documents: {
-      w9: [],
-      license: [],
-      insurance: [],
-      certificates: []
-    }
-  });
+  const [profile, setProfile] = useState<ContractorProfile>(contractorProfileService.getDefaultProfile());
+  const [loading, setLoading] = useState(true);
 
-  const handleProfileUpdate = (field: keyof ContractorProfile, value: any) => {
-    setProfile(prev => ({ ...prev, [field]: value }));
+  // Load profile from Supabase or localStorage
+  useEffect(() => {
+    const loadProfile = async () => {
+      try {
+        setLoading(true);
+        let profileData = await contractorProfileService.getProfile();
+        
+        if (!profileData) {
+          profileData = contractorProfileService.getDefaultProfile();
+        }
+        
+        setProfile(profileData);
+      } catch (error) {
+        console.error('Error loading contractor profile:', error);
+        setProfile(contractorProfileService.getDefaultProfile());
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadProfile();
+  }, []);
+
+  const handleProfileUpdate = async (field: keyof ContractorProfile, value: any) => {
+    const updatedProfile = { ...profile, [field]: value };
+    setProfile(updatedProfile);
+    
+    try {
+      // Save to Supabase (which also saves to localStorage as backup)
+      await contractorProfileService.saveProfile(updatedProfile);
+      // Dispatch custom event to notify sidebar of update
+      window.dispatchEvent(new CustomEvent('profileUpdate'));
+    } catch (error) {
+      console.error('Error saving profile:', error);
+      // Even if Supabase save fails, the localStorage backup ensures data isn't lost
+    }
   };
 
   const handleFileUpload = (tabType: DocumentTabType, files: FileList) => {
@@ -293,6 +311,16 @@ export const Profile: React.FC = () => {
   };
 
   const activeTabData = DOCUMENT_TABS.find(tab => tab.id === activeTab)!;
+
+  if (loading) {
+    return (
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div className="flex items-center justify-center">
+          <div className="text-lg">Loading contractor profile...</div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -553,10 +581,24 @@ export const Profile: React.FC = () => {
       {/* Save Button */}
       <div className="mt-8 flex justify-end">
         <button
-          onClick={() => alert('Profile saved!')}
-          className="px-6 py-3 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 transition-colors"
+          onClick={async () => {
+            try {
+              const success = await contractorProfileService.saveProfile(profile);
+              if (success) {
+                alert('Profile saved successfully!');
+                window.dispatchEvent(new CustomEvent('profileUpdate'));
+              } else {
+                alert('Error saving profile. Please try again.');
+              }
+            } catch (error) {
+              console.error('Error saving profile:', error);
+              alert('Error saving profile. Please try again.');
+            }
+          }}
+          disabled={loading}
+          className="px-6 py-3 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          Save Profile
+          {loading ? 'Loading...' : 'Save Profile'}
         </button>
       </div>
     </div>
