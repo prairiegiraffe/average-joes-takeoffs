@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { supabase, isSupabaseConfigured } from '../utils/supabase';
 import { getSupabase, isSupabaseReady } from '../utils/supabaseClient';
+import { signInDirectly, getProfileDirectly } from '../utils/supabaseDirectAuth';
 import { authService } from '../utils/authService';
 import { loginUser } from '../utils/auth';
 
@@ -67,41 +68,68 @@ export const LoginSupabase: React.FC<LoginSupabaseProps> = ({ onLogin }) => {
           setMode('signin');
         }
       } else {
-        // Sign in existing user
-        let data, error;
-        try {
-          const result = await supabaseClient.auth.signInWithPassword({
-            email: formData.email,
-            password: formData.password,
-          });
-          data = result.data;
-          error = result.error;
-        } catch (fetchError: any) {
-          console.error('Fetch error during signin:', fetchError);
-          // Fall back to mock auth on fetch error
-          const mockUser = loginUser(formData.email, formData.password);
-          if (mockUser) {
-            onLogin(mockUser);
-            return;
-          } else {
-            throw new Error('Network error and invalid mock credentials');
+        // Try direct API sign in first
+        console.log('Attempting direct API sign in...');
+        const directResult = await signInDirectly(formData.email, formData.password);
+        
+        if (directResult.error) {
+          console.log('Direct API failed:', directResult.error);
+          
+          // Try SDK as fallback
+          let data, error;
+          try {
+            const result = await supabaseClient.auth.signInWithPassword({
+              email: formData.email,
+              password: formData.password,
+            });
+            data = result.data;
+            error = result.error;
+          } catch (fetchError: any) {
+            console.error('SDK also failed:', fetchError);
+            // Fall back to mock auth on fetch error
+            const mockUser = loginUser(formData.email, formData.password);
+            if (mockUser) {
+              onLogin(mockUser);
+              return;
+            } else {
+              throw new Error('Authentication failed - please check credentials');
+            }
           }
-        }
 
-        if (error) throw error;
+          if (error) throw error;
 
-        if (data.user) {
-          // Get or create profile
-          const { data: profile } = await supabaseClient
-            .from('profiles')
-            .select('*')
-            .eq('id', data.user.id)
-            .single();
+          if (data.user) {
+            // Get or create profile
+            const { data: profile } = await supabaseClient
+              .from('profiles')
+              .select('*')
+              .eq('id', data.user.id)
+              .single();
 
+            const userData = {
+              id: data.user.id,
+              email: data.user.email!,
+              name: profile?.name || data.user.email!.split('@')[0],
+              role: profile?.role || 'contractor',
+              company: profile?.company || 'My Company',
+              tenantId: profile?.tenant_id || null
+            };
+
+            // Save to localStorage for app compatibility
+            localStorage.setItem('averagejoes_user', JSON.stringify(userData));
+            
+            onLogin(userData);
+          }
+        } else if (directResult.user) {
+          console.log('Direct API succeeded!');
+          
+          // Get profile
+          const profile = await getProfileDirectly(directResult.user.id);
+          
           const userData = {
-            id: data.user.id,
-            email: data.user.email!,
-            name: profile?.name || data.user.email!.split('@')[0],
+            id: directResult.user.id,
+            email: directResult.user.email,
+            name: profile?.name || directResult.user.email.split('@')[0],
             role: profile?.role || 'contractor',
             company: profile?.company || 'My Company',
             tenantId: profile?.tenant_id || null
