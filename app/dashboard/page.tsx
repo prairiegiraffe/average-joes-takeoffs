@@ -1,169 +1,99 @@
-import { createClient } from '@/lib/supabase'
-import { redirect } from 'next/navigation'
-import { Button } from '@/components/ui/button'
-import SignOutButton from '@/components/auth/SignOutButton'
+'use client'
 
-export const dynamic = 'force-dynamic'
-export const revalidate = 0
+import { useEffect, useState } from 'react'
+import { createClient } from '@/lib/supabase-client'
+import { useRouter } from 'next/navigation'
 
-export default async function DashboardPage() {
-  const supabase = createClient()
+export default function DashboardPage() {
+  const [user, setUser] = useState<any>(null)
+  const [loading, setLoading] = useState(true)
+  const router = useRouter()
   
-  const { data: { user } } = await supabase.auth.getUser()
-
-  if (!user) {
-    redirect('/auth/signin')
+  useEffect(() => {
+    const checkUser = async () => {
+      const supabase = createClient()
+      const { data: { user } } = await supabase.auth.getUser()
+      
+      if (!user) {
+        router.push('/auth/signin')
+        return
+      }
+      
+      setUser(user)
+      setLoading(false)
+    }
+    
+    checkUser()
+  }, [router])
+  
+  const handleSignOut = async () => {
+    const supabase = createClient()
+    await supabase.auth.signOut()
+    router.push('/')
   }
-
-  // Try to get user profile (may not exist yet)
-  const { data: profile, error: profileError } = await supabase
-    .from('profiles')
-    .select('*, tenants(*)')
-    .eq('user_id', user.id)
-    .single()
   
-  // If profile doesn't exist, we'll still show the dashboard with email
-  const displayName = profile?.full_name || user.email || 'User'
-
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-2xl">Loading...</div>
+      </div>
+    )
+  }
+  
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="bg-white shadow">
-        <div className="px-4 sm:px-6 lg:max-w-6xl lg:mx-auto lg:px-8">
-          <div className="py-6 md:flex md:items-center md:justify-between">
-            <div className="flex-1 min-w-0">
-              <h1 className="text-2xl font-bold leading-7 text-gray-900 sm:text-3xl sm:truncate">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center py-6">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">
                 Contractor Dashboard
               </h1>
-              <p className="mt-1 text-sm text-gray-500">
-                Welcome back, {displayName}
-              </p>
+              <p className="text-gray-600">Welcome back, {user?.email}</p>
             </div>
-            <div className="mt-4 md:mt-0">
-              <SignOutButton />
-            </div>
+            <button
+              onClick={handleSignOut}
+              className="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700"
+            >
+              Sign Out
+            </button>
           </div>
         </div>
       </div>
-
-      <div className="max-w-6xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {/* Quick Stats */}
-          <div className="bg-white overflow-hidden shadow rounded-lg">
-            <div className="p-5">
-              <div className="flex items-center">
-                <div className="flex-shrink-0">
-                  <div className="w-8 h-8 bg-blue-500 rounded-md flex items-center justify-center">
-                    <span className="text-white text-sm font-medium">P</span>
-                  </div>
-                </div>
-                <div className="ml-5 w-0 flex-1">
-                  <dl>
-                    <dt className="text-sm font-medium text-gray-500 truncate">
-                      Active Projects
-                    </dt>
-                    <dd className="text-lg font-medium text-gray-900">
-                      0
-                    </dd>
-                  </dl>
-                </div>
-              </div>
-            </div>
+      
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="bg-white p-6 rounded-lg shadow">
+            <h3 className="text-lg font-semibold mb-2">Active Projects</h3>
+            <p className="text-3xl font-bold text-blue-600">0</p>
           </div>
-
-          <div className="bg-white overflow-hidden shadow rounded-lg">
-            <div className="p-5">
-              <div className="flex items-center">
-                <div className="flex-shrink-0">
-                  <div className="w-8 h-8 bg-green-500 rounded-md flex items-center justify-center">
-                    <span className="text-white text-sm font-medium">C</span>
-                  </div>
-                </div>
-                <div className="ml-5 w-0 flex-1">
-                  <dl>
-                    <dt className="text-sm font-medium text-gray-500 truncate">
-                      Customers
-                    </dt>
-                    <dd className="text-lg font-medium text-gray-900">
-                      0
-                    </dd>
-                  </dl>
-                </div>
-              </div>
-            </div>
+          
+          <div className="bg-white p-6 rounded-lg shadow">
+            <h3 className="text-lg font-semibold mb-2">Total Customers</h3>
+            <p className="text-3xl font-bold text-green-600">0</p>
           </div>
-
-          <div className="bg-white overflow-hidden shadow rounded-lg">
-            <div className="p-5">
-              <div className="flex items-center">
-                <div className="flex-shrink-0">
-                  <div className="w-8 h-8 bg-purple-500 rounded-md flex items-center justify-center">
-                    <span className="text-white text-sm font-medium">T</span>
-                  </div>
-                </div>
-                <div className="ml-5 w-0 flex-1">
-                  <dl>
-                    <dt className="text-sm font-medium text-gray-500 truncate">
-                      Takeoffs
-                    </dt>
-                    <dd className="text-lg font-medium text-gray-900">
-                      0
-                    </dd>
-                  </dl>
-                </div>
-              </div>
-            </div>
+          
+          <div className="bg-white p-6 rounded-lg shadow">
+            <h3 className="text-lg font-semibold mb-2">Takeoffs</h3>
+            <p className="text-3xl font-bold text-purple-600">0</p>
           </div>
         </div>
-
-        {/* Recent Activity */}
-        <div className="mt-8">
-          <div className="bg-white shadow rounded-lg">
-            <div className="px-4 py-5 sm:p-6">
-              <h3 className="text-lg leading-6 font-medium text-gray-900">
-                Recent Activity
-              </h3>
-              <div className="mt-6">
-                <div className="text-center py-8">
-                  <p className="text-sm text-gray-500">No recent activity</p>
-                  <p className="text-xs text-gray-400 mt-2">
-                    Start by creating your first project or adding a customer
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Quick Actions */}
-        <div className="mt-8">
-          <div className="bg-white shadow rounded-lg">
-            <div className="px-4 py-5 sm:p-6">
-              <h3 className="text-lg leading-6 font-medium text-gray-900">
-                Quick Actions
-              </h3>
-              <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                <button className="relative block w-full border-2 border-gray-300 border-dashed rounded-lg p-4 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                  <span className="block text-sm font-medium text-gray-900">
-                    New Takeoff
-                  </span>
-                </button>
-                <button className="relative block w-full border-2 border-gray-300 border-dashed rounded-lg p-4 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                  <span className="block text-sm font-medium text-gray-900">
-                    Add Customer
-                  </span>
-                </button>
-                <button className="relative block w-full border-2 border-gray-300 border-dashed rounded-lg p-4 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                  <span className="block text-sm font-medium text-gray-900">
-                    View Projects
-                  </span>
-                </button>
-                <button className="relative block w-full border-2 border-gray-300 border-dashed rounded-lg p-4 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                  <span className="block text-sm font-medium text-gray-900">
-                    Settings
-                  </span>
-                </button>
-              </div>
-            </div>
+        
+        <div className="mt-8 bg-white rounded-lg shadow p-6">
+          <h2 className="text-xl font-semibold mb-4">Quick Actions</h2>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <button className="p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-gray-400">
+              New Takeoff
+            </button>
+            <button className="p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-gray-400">
+              Add Customer
+            </button>
+            <button className="p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-gray-400">
+              View Projects
+            </button>
+            <button className="p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-gray-400">
+              Settings
+            </button>
           </div>
         </div>
       </div>

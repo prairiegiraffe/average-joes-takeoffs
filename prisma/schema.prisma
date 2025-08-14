@@ -1,0 +1,168 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Auth tables for NextAuth
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  emailVerified DateTime?
+  name          String?
+  image         String?
+  password      String?
+  
+  // Multi-tenancy
+  tenantId      String?
+  tenant        Tenant?   @relation(fields: [tenantId], references: [id])
+  role          UserRole  @default(USER)
+  
+  accounts      Account[]
+  sessions      Session[]
+  
+  // Business relationships
+  contractor    Contractor?
+  takeoffs      Takeoff[]
+  
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+enum UserRole {
+  SUPER_ADMIN
+  TENANT_ADMIN
+  USER
+}
+
+model Tenant {
+  id            String       @id @default(cuid())
+  name          String
+  slug          String       @unique
+  plan          TenantPlan   @default(FREE)
+  
+  users         User[]
+  contractors   Contractor[]
+  customers     Customer[]
+  takeoffs      Takeoff[]
+  
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+}
+
+enum TenantPlan {
+  FREE
+  PRO
+  ENTERPRISE
+}
+
+model Contractor {
+  id              String    @id @default(cuid())
+  userId          String    @unique
+  user            User      @relation(fields: [userId], references: [id])
+  tenantId        String
+  tenant          Tenant    @relation(fields: [tenantId], references: [id])
+  
+  businessName    String
+  licenseNumber   String?
+  phone           String?
+  address         String?
+  city            String?
+  state           String?
+  zip             String?
+  
+  takeoffs        Takeoff[]
+  
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+}
+
+model Customer {
+  id            String    @id @default(cuid())
+  tenantId      String
+  tenant        Tenant    @relation(fields: [tenantId], references: [id])
+  
+  name          String
+  email         String?
+  phone         String?
+  address       String?
+  city          String?
+  state         String?
+  zip           String?
+  
+  takeoffs      Takeoff[]
+  
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+model Takeoff {
+  id            String       @id @default(cuid())
+  tenantId      String
+  tenant        Tenant       @relation(fields: [tenantId], references: [id])
+  contractorId  String
+  contractor    Contractor   @relation(fields: [contractorId], references: [id])
+  customerId    String?
+  customer      Customer?    @relation(fields: [customerId], references: [id])
+  createdById   String
+  createdBy     User         @relation(fields: [createdById], references: [id])
+  
+  projectName   String
+  type          TakeoffType
+  status        TakeoffStatus @default(DRAFT)
+  
+  // JSON data for calculations
+  measurements  Json
+  materials     Json
+  calculations  Json
+  totalCost     Float?
+  
+  notes         String?
+  
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+}
+
+enum TakeoffType {
+  ROOFING
+  SIDING
+  STONE
+  GENERAL
+}
+
+enum TakeoffStatus {
+  DRAFT
+  COMPLETED
+  APPROVED
+  ARCHIVED
+}
