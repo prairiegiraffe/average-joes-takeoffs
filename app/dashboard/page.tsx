@@ -3,6 +3,9 @@ import { redirect } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import SignOutButton from '@/components/auth/SignOutButton'
 
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 export default async function DashboardPage() {
   const supabase = createClient()
   
