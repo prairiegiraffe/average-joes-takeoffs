@@ -1,5 +1,7 @@
 import { createClient } from '@/lib/supabase'
 import { redirect } from 'next/navigation'
+import { Button } from '@/components/ui/button'
+import SignOutButton from '@/components/auth/SignOutButton'
 
 export default async function DashboardPage() {
   const supabase = createClient()
@@ -29,6 +31,9 @@ export default async function DashboardPage() {
               <p className="mt-1 text-sm text-gray-500">
                 Welcome back, {profile?.full_name || user.email}
               </p>
+            </div>
+            <div className="mt-4 md:mt-0">
+              <SignOutButton />
             </div>
           </div>
         </div>
