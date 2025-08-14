@@ -11,7 +11,7 @@
 DO $$
 DECLARE
   test_user_id uuid;
-  test_tenant_id uuid := 'test-tenant-001'::uuid;
+  test_tenant_id uuid := '11111111-1111-1111-1111-111111111111'::uuid;
 BEGIN
   -- Get the user_id for test@example.com
   SELECT id INTO test_user_id FROM auth.users WHERE email = 'test@example.com' LIMIT 1;
