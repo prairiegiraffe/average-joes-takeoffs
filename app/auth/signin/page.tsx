@@ -31,18 +31,10 @@ export default function SignInPage() {
       }
 
       if (data.user) {
-        // Check if user has a profile, redirect accordingly
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('role, tenant_id')
-          .eq('user_id', data.user.id)
-          .single()
-
-        if (profile?.role === 'super_admin') {
-          router.push('/admin')
-        } else {
-          router.push('/dashboard')
-        }
+        // For now, just redirect to dashboard
+        // We'll check profile on the dashboard page itself
+        router.push('/dashboard')
+        router.refresh()
       }
     } catch (err: any) {
       setError(err.message)

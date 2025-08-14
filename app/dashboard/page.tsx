@@ -12,12 +12,15 @@ export default async function DashboardPage() {
     redirect('/auth/signin')
   }
 
-  // Get user profile
-  const { data: profile } = await supabase
+  // Try to get user profile (may not exist yet)
+  const { data: profile, error: profileError } = await supabase
     .from('profiles')
     .select('*, tenants(*)')
     .eq('user_id', user.id)
     .single()
+  
+  // If profile doesn't exist, we'll still show the dashboard with email
+  const displayName = profile?.full_name || user.email || 'User'
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -29,7 +32,7 @@ export default async function DashboardPage() {
                 Contractor Dashboard
               </h1>
               <p className="mt-1 text-sm text-gray-500">
-                Welcome back, {profile?.full_name || user.email}
+                Welcome back, {displayName}
               </p>
             </div>
             <div className="mt-4 md:mt-0">
